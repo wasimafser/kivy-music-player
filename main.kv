@@ -1,0 +1,83 @@
+<MainScreen>:
+    BoxLayout:
+        orientation: "vertical"
+
+        MDToolbar:
+            title: "Kivy Music Player"
+            right_action_items: [["settings", lambda x: root.go_to_settings()]]
+
+        MDBottomNavigation:
+
+            HomeScreen:
+                name: "home_screen"
+                text: 'Home'
+
+            SongListScreen:
+                name: "song_list_screen"
+                text: 'Songs'
+
+
+<ItemWithRemove>:
+
+    IconRightWidget:
+        icon: 'minus'
+
+<SettingsSearchPathsScreen>:
+    name: 'settings_search_paths'
+    BoxLayout:
+        orientation: 'vertical'
+
+        ScrollView:
+
+            MDList:
+                id: search_paths_list
+
+        MDBottomAppBar:
+            MDToolbar:
+                title: "Search Paths"
+                icon: "plus"
+                type: 'bottom'
+                left_action_items: [["android", lambda x: root.go_to_settings()]]
+                on_action_button: root.launch_file_manager()
+                mode: 'end'
+
+<SettingsScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+
+        MDToolbar:
+            title: "Settings"
+            left_action_items: [["android", lambda x: root.go_to_main()]]
+
+        ScrollView:
+
+            MDList:
+                id: settings_list
+
+                TwoLineIconListItem:
+                    text: "Search Paths"
+                    secondary_text: "where to look for songs"
+                    on_press: root.go_to_search_paths()
+
+                    IconLeftWidget:
+                        icon: 'search'
+
+
+
+
+<HomeScreen>:
+    BoxLayout:
+        orientation: "vertical"
+        MDLabel:
+            text: "home"
+
+
+<SongListScreen>:
+    BoxLayout:
+        orientation: "vertical"
+        MDLabel:
+            text: "songlist"
+
+        ScrollView:
+            MDList:
+                id: songs_list
