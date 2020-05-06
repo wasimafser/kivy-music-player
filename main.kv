@@ -82,7 +82,7 @@
 
 <SongItem>:
     ImageLeftWidget:
-        texture: root.artwork
+        id: artwork_thumb
 
 <SongScreen>:
     name: 'song_screen'
@@ -94,7 +94,6 @@
             size: self.texture_size
             size_hint: None, None
             elevation: 10
-            source: 'artwork/image.jpg'
             pos_hint: {"center_x": .5, "center_y": .5}
             id: album_art
 

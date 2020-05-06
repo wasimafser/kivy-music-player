@@ -116,8 +116,7 @@ class SongScreen(Screen):
         MDApp.get_running_app().sm.current = 'main_screen'
 
     def compute_average_image_color(self, *args):
-        from PIL import Image
-        img = Image.open(self.ids.album_art.source)
+        img = self.ids.album_art.texture
         width, height = img.size
 
         r_total = 0
@@ -127,7 +126,9 @@ class SongScreen(Screen):
         count = 0
         for x in range(0, width):
             for y in range(0, height):
-                r, g, b = img.getpixel((x,y))
+                p = img.get_region(x,y, x+1, y+1).pixels
+                r, g, b, a = p[0], p[1], p[2], p[3]
+                # r, g, b, a = img.get_region(x,y, x+1, y+1).pixels
                 r_total += r
                 g_total += g
                 b_total += b
@@ -145,7 +146,6 @@ class SongScreen(Screen):
 
     def __init__(self, *args, **kwargs):
         super(SongScreen, self).__init__(*args, **kwargs)
-        # self.song_path = kwargs.pop('song_path')
         self.app = MDApp.get_running_app()
         self.app.bind(now_playing = self.play_song)
         self.play_song()
@@ -153,17 +153,8 @@ class SongScreen(Screen):
     def play_song(self, *args):
         self.song_path = self.app.now_playing['path']
 
-        # try:
-        #     song_file = mutagen.File(self.song_path)
-        #     artwork = song_file.tags['APIC:'].data
-        #     with open('artwork/image.jpg', 'wb+') as img:
-        #         img.write(artwork)
-        #     self.ids.album_art.source = 'artwork/image.jpg'
-        # except Exception as e:
-        #     self.ids.album_art.source = 'artwork/default.jpg'
-        # Clock.schedule_once(self.compute_average_image_color, 0.5)
         self.ids.album_art.texture = self.app.now_playing['artwork']
-
+        # Clock.schedule_once(self.compute_average_image_color, 0.5)
 
         if self.song is not None and self.song.state == 'play':
             self.song.stop()
@@ -192,19 +183,10 @@ class SongScreen(Screen):
             self.song.play()
 
 class SongListScreen(MDBottomNavigationItem):
-    # all_songs = DictProperty()
 
     def __init__(self, *args, **kwargs):
         super(SongListScreen, self).__init__(*args, **kwargs)
         self.all_songs = MDApp.get_running_app().all_songs
-        # paths = MDApp.get_running_app().songs
-        # id = 0
-        # for path in paths:
-        #     self.all_songs[id] = {
-        #         'path': path,
-        #         'name': pathlib.Path(path).stem
-        #     }
-        #     id += 1
 
         Clock.schedule_once(self.populate_song_list)
 
@@ -213,10 +195,10 @@ class SongListScreen(MDBottomNavigationItem):
             song = self.all_songs[id]
             item = SongItem(
                 text= song['name'],
-                on_release= self.play_song
+                on_release= self.play_song,
             )
             item.song_id = id
-            item.artwork = song['artwork']
+            item.ids.artwork_thumb.texture = item.artwork = song['artwork']
             self.ids.songs_list.add_widget(item)
 
     def play_song(self, *args):
@@ -243,14 +225,11 @@ class MainApp(MDApp):
         try:
             song_file = mutagen.File(song_path)
             artwork_data = song_file.tags['APIC:'].data
-            artwork = CoreImage(io.BytesIO(artwork_data), ext='png', filename=f"{song_id}.png", keep_data=True).texture
-            # with open('artwork/image.jpg', 'wb+') as img:
-            #     img.write(artwork)
-            #  artwork = f'artwork/{song_id}.jpg'
+            artwork = CoreImage(io.BytesIO(artwork_data), ext='png', filename=f"{song_id}.png", mipmap=True).texture
         except Exception as e:
             print("has error")
             artwork_data = io.BytesIO(open('artwork/default.jpg', 'rb').read())
-            artwork = CoreImage(artwork_data, ext='png').texture
+            artwork = CoreImage(artwork_data, ext='png', mipmap=True).texture
 
         return artwork
 
