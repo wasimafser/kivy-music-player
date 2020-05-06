@@ -75,9 +75,54 @@
 <SongListScreen>:
     BoxLayout:
         orientation: "vertical"
-        MDLabel:
-            text: "songlist"
 
         ScrollView:
             MDList:
                 id: songs_list
+
+<SongItem>:
+    ImageLeftWidget:
+        texture: root.artwork
+
+<SongScreen>:
+    name: 'song_screen'
+    BoxLayout:
+        orientation: 'vertical'
+        id: song_screen_bg
+
+        NowPlayingAlbumArt:
+            size: self.texture_size
+            size_hint: None, None
+            elevation: 10
+            source: 'artwork/image.jpg'
+            pos_hint: {"center_x": .5, "center_y": .5}
+            id: album_art
+
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: None
+
+            MDLabel:
+                id: song_cur_pos_label
+                size_hint: 0.2, 1
+                halign: "center"
+            MDSlider:
+                id: song_slider
+                min: 0
+                max: root.song_max_length
+                value: root.song_current_pos
+                hint: False
+                on_touch_up: root.seek_song()
+            MDLabel:
+                id: song_total_length_label
+                size_hint: 0.2, 1
+                halign: "center"
+
+        MDBottomAppBar:
+            MDToolbar:
+                title: "SONG"
+                icon: "play"
+                type: 'bottom'
+                left_action_items: [["android", lambda x: root.go_to_main()]]
+                on_action_button: root.toggle_song_play()
+                mode: 'center'

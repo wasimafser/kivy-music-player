@@ -4,17 +4,23 @@ os.environ['KIVY_AUDIO'] = "ffpyplayer"
 from kivymd.app import MDApp
 from kivymd.uix.bottomnavigation import MDBottomNavigationItem
 from kivymd.uix.dialog import MDDialog
-from kivymd.uix.list import OneLineAvatarIconListItem
+from kivymd.uix.list import OneLineAvatarIconListItem, OneLineAvatarListItem
 from kivymd.uix.button import MDFlatButton
 from kivymd.uix.filemanager import MDFileManager
+from kivymd.uix.behaviors import RectangularElevationBehavior
 
 from kivy.uix.screenmanager import ScreenManager, Screen
-from kivy.properties import ListProperty, DictProperty, NumericProperty
+from kivy.properties import ListProperty, DictProperty, NumericProperty, StringProperty
 from kivy.clock import Clock
 from kivy.core.audio import SoundLoader
+from kivy.core.image import Image as CoreImage
+from kivy.uix.image import Image
+from kivy.graphics import Color, Rectangle
 
 import glob
 import pathlib
+import datetime
+import mutagen
 
 class MainScreen(Screen):
     """
@@ -88,56 +94,180 @@ class SettingsScreen(Screen):
 class HomeScreen(MDBottomNavigationItem):
     pass
 
-class SongItem(OneLineAvatarIconListItem):
+class SongItem(OneLineAvatarListItem):
     song_id = NumericProperty()
+    artwork = None
+
+class NowPlayingAlbumArt(Image, RectangularElevationBehavior):
+    pass
+
+class SongScreen(Screen):
+    song_max_length = NumericProperty(0)
+    song_current_pos = NumericProperty(0)
+    song_path = StringProperty('')
+    avg_artwork_color = (0, 0, 0)
+    song = None
+
+    def convert_seconds_to_min(self, sec):
+        val = str(datetime.timedelta(seconds = sec)).split(':')
+        return f'{val[1]}:{val[2].split(".")[0]}'
+
+    def go_to_main(self, *args):
+        MDApp.get_running_app().sm.current = 'main_screen'
+
+    def compute_average_image_color(self, *args):
+        from PIL import Image
+        img = Image.open(self.ids.album_art.source)
+        width, height = img.size
+
+        r_total = 0
+        g_total = 0
+        b_total = 0
+
+        count = 0
+        for x in range(0, width):
+            for y in range(0, height):
+                r, g, b = img.getpixel((x,y))
+                r_total += r
+                g_total += g
+                b_total += b
+                count += 1
+
+        r_final = round((r_total/count)/255, 2)
+        g_final = round((g_total/count)/255, 2)
+        b_final = round((b_total/count)/255, 2)
+
+        self.avg_artwork_color = (r_final, g_final, b_final)
+        bg = self.ids.song_screen_bg
+        with bg.canvas.before:
+            Color(r_final, g_final, b_final)
+            Rectangle(size=bg.size, pos=bg.pos)
+
+    def __init__(self, *args, **kwargs):
+        super(SongScreen, self).__init__(*args, **kwargs)
+        # self.song_path = kwargs.pop('song_path')
+        self.app = MDApp.get_running_app()
+        self.app.bind(now_playing = self.play_song)
+        self.play_song()
+
+    def play_song(self, *args):
+        self.song_path = self.app.now_playing['path']
+
+        # try:
+        #     song_file = mutagen.File(self.song_path)
+        #     artwork = song_file.tags['APIC:'].data
+        #     with open('artwork/image.jpg', 'wb+') as img:
+        #         img.write(artwork)
+        #     self.ids.album_art.source = 'artwork/image.jpg'
+        # except Exception as e:
+        #     self.ids.album_art.source = 'artwork/default.jpg'
+        # Clock.schedule_once(self.compute_average_image_color, 0.5)
+        self.ids.album_art.texture = self.app.now_playing['artwork']
+
+
+        if self.song is not None and self.song.state == 'play':
+            self.song.stop()
+
+        self.song = SoundLoader.load(self.song_path)
+        if self.song:
+            self.song_max_length = self.song.length
+            self.ids.song_total_length_label.text = self.convert_seconds_to_min(self.song_max_length)
+            self.song.play()
+            Clock.schedule_interval(self.manage_song, 1)
+
+    def manage_song(self, *args):
+        # print(self.song.get_pos(), self.song.length)
+        self.song_current_pos = self.song.get_pos()
+        self.ids.song_cur_pos_label.text = self.convert_seconds_to_min(self.song_current_pos)
+
+    def seek_song(self, *args):
+        print("touched")
+        self.song_current_pos = self.ids.song_slider.value
+        self.song.seek(self.song_current_pos)
+
+    def toggle_song_play(self, *args):
+        if self.song.state == 'play':
+            self.song.stop()
+        else:
+            self.song.play()
 
 class SongListScreen(MDBottomNavigationItem):
-    all_songs = DictProperty()
+    # all_songs = DictProperty()
 
     def __init__(self, *args, **kwargs):
         super(SongListScreen, self).__init__(*args, **kwargs)
-        paths = MDApp.get_running_app().songs
-        id = 0
-        for path in paths:
-            self.all_songs[id] = {
-                'path': path,
-                'name': pathlib.Path(path).stem
-            }
-            id += 1
+        self.all_songs = MDApp.get_running_app().all_songs
+        # paths = MDApp.get_running_app().songs
+        # id = 0
+        # for path in paths:
+        #     self.all_songs[id] = {
+        #         'path': path,
+        #         'name': pathlib.Path(path).stem
+        #     }
+        #     id += 1
 
         Clock.schedule_once(self.populate_song_list)
 
     def populate_song_list(self, *args):
         for id in self.all_songs.keys():
+            song = self.all_songs[id]
             item = SongItem(
-                text= self.all_songs[id]['name'],
+                text= song['name'],
                 on_release= self.play_song
             )
             item.song_id = id
+            item.artwork = song['artwork']
             self.ids.songs_list.add_widget(item)
 
     def play_song(self, *args):
         song_path = self.all_songs[args[0].song_id]['path']
+        app = MDApp.get_running_app()
+        app.now_playing = self.all_songs[args[0].song_id]
 
-        self.song = SoundLoader.load(song_path)
-        if self.song:
-            self.song.play()
-            Clock.schedule_interval(self.manage_song, 1)
+        sm = app.sm
+        screen_name = 'song_screen'
+        if sm.has_screen(screen_name):
+            sm.current = screen_name
+        else:
+            sm.add_widget(SongScreen())
+            sm.current = screen_name
 
-    def manage_song(self, *args):
-        print(self.song.get_pos(), self.song.length)
 
 
 class MainApp(MDApp):
-    songs = ListProperty()
+    all_songs = DictProperty()
+    now_playing = DictProperty()
+
+    def extract_song_artwork(self, song_path, song_id):
+        import io
+        try:
+            song_file = mutagen.File(song_path)
+            artwork_data = song_file.tags['APIC:'].data
+            artwork = CoreImage(io.BytesIO(artwork_data), ext='png', filename=f"{song_id}.png", keep_data=True).texture
+            # with open('artwork/image.jpg', 'wb+') as img:
+            #     img.write(artwork)
+            #  artwork = f'artwork/{song_id}.jpg'
+        except Exception as e:
+            print("has error")
+            artwork_data = io.BytesIO(open('artwork/default.jpg', 'rb').read())
+            artwork = CoreImage(artwork_data, ext='png').texture
+
+        return artwork
 
     def build(self):
         # SEARCH FOR SONGS FROM THE GIVEN PATHS
         config = self.config
         folders = str(config.get('search_paths', 'folders')).split(',')
+        id = 0
         for folder in folders:
-            for file in glob.glob(f"{folder}/*.mp3"):
-                self.songs.append(file)
+            for format in ['mp3', 'wav']:
+                for file in glob.glob(f"{folder}/*.{format}"):
+                    self.all_songs[id] = {
+                        'path': file,
+                        'name': pathlib.Path(file).stem,
+                        'artwork': self.extract_song_artwork(file, id)
+                    }
+                    id += 1
 
         self.sm = ScreenManager()
         self.sm.add_widget(MainScreen(name='main_screen'))
