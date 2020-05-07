@@ -119,8 +119,9 @@
 
         MDBottomAppBar:
             MDToolbar:
-                title: "SONG"
-                icon: "play"
+                id: song_screen_toolbar
+                title: root.song_name
+                icon: root.song_state
                 type: 'bottom'
                 left_action_items: [["android", lambda x: root.go_to_main()]]
                 on_action_button: root.toggle_song_play()

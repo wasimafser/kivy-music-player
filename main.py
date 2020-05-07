@@ -107,6 +107,8 @@ class SongScreen(Screen):
     song_path = StringProperty('')
     avg_artwork_color = (0, 0, 0)
     song = None
+    song_state = StringProperty('pause')
+    song_name = StringProperty('')
 
     def convert_seconds_to_min(self, sec):
         val = str(datetime.timedelta(seconds = sec)).split(':')
@@ -151,13 +153,15 @@ class SongScreen(Screen):
         self.play_song()
 
     def play_song(self, *args):
-        self.song_path = self.app.now_playing['path']
-
-        self.ids.album_art.texture = self.app.now_playing['artwork']
+        now_playing = self.app.now_playing
+        self.song_path = now_playing['path']
+        self.song_name = now_playing['name']
+        
+        self.ids.album_art.texture = now_playing['artwork']
         # Clock.schedule_once(self.compute_average_image_color, 0.5)
-
-        if self.song is not None and self.song.state == 'play':
+        if self.song is not None:
             self.song.stop()
+            self.song.unload()
 
         self.song = SoundLoader.load(self.song_path)
         if self.song:
@@ -178,8 +182,10 @@ class SongScreen(Screen):
 
     def toggle_song_play(self, *args):
         if self.song.state == 'play':
+            self.song_state = 'play'
             self.song.stop()
-        else:
+        elif self.song.state == 'stop':
+            self.song_state = 'pause'
             self.song.play()
 
 class SongListScreen(MDBottomNavigationItem):
@@ -202,7 +208,6 @@ class SongListScreen(MDBottomNavigationItem):
             self.ids.songs_list.add_widget(item)
 
     def play_song(self, *args):
-        song_path = self.all_songs[args[0].song_id]['path']
         app = MDApp.get_running_app()
         app.now_playing = self.all_songs[args[0].song_id]
 
