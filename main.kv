@@ -111,7 +111,7 @@
                 max: root.song_max_length
                 value: root.song_current_pos
                 hint: False
-                on_touch_up: root.seek_song()
+                on_touch_up: if self.collide_point(*args[1].pos): root.seek_song()
             MDLabel:
                 id: song_total_length_label
                 size_hint: 0.2, 1
@@ -123,6 +123,7 @@
                 title: root.song_name
                 icon: root.song_state
                 type: 'bottom'
-                left_action_items: [["android", lambda x: root.go_to_main()]]
+                left_action_items: [["android", lambda x: root.go_to_main()], ["skip-previous", lambda x: root.prev_song()]]
+                right_action_items: [["skip-next", lambda x: root.next_song()]]
                 on_action_button: root.toggle_song_play()
                 mode: 'center'

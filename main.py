@@ -156,7 +156,7 @@ class SongScreen(Screen):
         now_playing = self.app.now_playing
         self.song_path = now_playing['path']
         self.song_name = now_playing['name']
-        
+
         self.ids.album_art.texture = now_playing['artwork']
         # Clock.schedule_once(self.compute_average_image_color, 0.5)
         if self.song is not None:
@@ -176,7 +176,6 @@ class SongScreen(Screen):
         self.ids.song_cur_pos_label.text = self.convert_seconds_to_min(self.song_current_pos)
 
     def seek_song(self, *args):
-        print("touched")
         self.song_current_pos = self.ids.song_slider.value
         self.song.seek(self.song_current_pos)
 
@@ -187,6 +186,21 @@ class SongScreen(Screen):
         elif self.song.state == 'stop':
             self.song_state = 'pause'
             self.song.play()
+
+    def next_song(self, *args):
+        current_song_id = self.app.now_playing['id']
+        try:
+            self.app.now_playing = self.app.all_songs[current_song_id+1]
+        except KeyError:
+            self.app.now_playing = self.app.all_songs[0]
+
+    def prev_song(self, *args):
+        current_song_id = self.app.now_playing['id']
+        try:
+            self.app.now_playing = self.app.all_songs[current_song_id-1]
+        except KeyError:
+            self.app.now_playing = self.app.all_songs[0]
+
 
 class SongListScreen(MDBottomNavigationItem):
 
@@ -247,6 +261,7 @@ class MainApp(MDApp):
             for format in ['mp3', 'wav']:
                 for file in glob.glob(f"{folder}/*.{format}"):
                     self.all_songs[id] = {
+                        'id': id,
                         'path': file,
                         'name': pathlib.Path(file).stem,
                         'artwork': self.extract_song_artwork(file, id)
