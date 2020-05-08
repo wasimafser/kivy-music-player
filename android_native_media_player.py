@@ -11,7 +11,8 @@ class SoundAndroidPlayer(Sound):
 
     def __init__(self, **kwargs):
         self._mediaplayer = None
-        print("NATIVE MEDIA PLAYER INIT")
+        self._state = ''
+        self.state = 'stop'
         super(SoundAndroidPlayer, self).__init__(**kwargs)
 
     def load(self):
@@ -21,26 +22,37 @@ class SoundAndroidPlayer(Sound):
         self._mediaplayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
         self._mediaplayer.setDataSource(self.filename)
         self._mediaplayer.prepare()
+        self._state = 'paused'
 
     def unload(self):
         self.stop()
         self._mediaplayer = None
+        self._state = ''
+        self.state = 'stop'
 
     def play(self):
         if not self._mediaplayer:
             return
+        self._state = 'playing'
+        self.state = 'play'
         self._mediaplayer.start()
         super(SoundAndroidPlayer, self).play()
 
     def stop(self):
         if not self._mediaplayer:
             return
-        self._mediaplayer.reset()
+        elif self._state == 'playing':
+            # self._mediaplayer.reset()
+            self._mediaplayer.pause()
+            self._state = 'paused'
+            self.state = 'stop'
+        super(SoundAndroidPlayer, self).stop()
 
     def seek(self, position):
+        print(position)
         if not self._mediaplayer:
             return
-        self._mediaplayer.seekTo(float(position))
+        self._mediaplayer.seekTo(float(position/1000), 2)
 
     def get_pos(self):
         if self._mediaplayer:
