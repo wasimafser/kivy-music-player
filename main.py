@@ -1,5 +1,6 @@
 import os
 os.environ['KIVY_AUDIO'] = "ffpyplayer"
+# import ffpyplayer.player.core
 
 from kivymd.app import MDApp
 from kivymd.uix.bottomnavigation import MDBottomNavigationItem
@@ -12,10 +13,15 @@ from kivymd.uix.behaviors import RectangularElevationBehavior
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.properties import ListProperty, DictProperty, NumericProperty, StringProperty
 from kivy.clock import Clock
-from kivy.core.audio import SoundLoader
+from kivy.core.audio import Sound, SoundLoader
 from kivy.core.image import Image as CoreImage
 from kivy.uix.image import Image
 from kivy.graphics import Color, Rectangle
+from kivy import platform
+
+from plyer import storagepath
+if platform == 'android':
+    from android.permissions import request_permissions, Permission
 
 import glob
 import pathlib
@@ -38,7 +44,7 @@ class SettingsSearchPathsScreen(Screen):
     def __init__(self, *args, **kwargs):
         super(SettingsSearchPathsScreen, self).__init__(*args, **kwargs)
         self.config = MDApp.get_running_app().config
-        self.search_paths = str(self.config.get('search_paths', 'folders')).split(',')
+        self.search_paths = str(self.config.get('search-paths', 'folders')).split(',')
 
         for path in self.search_paths:
             item = ItemWithRemove(
@@ -49,6 +55,8 @@ class SettingsSearchPathsScreen(Screen):
         Clock.schedule_once(self.populate_list)
 
     def populate_list(self, *args):
+        if platform == 'android':
+            request_permissions([Permission.READ_EXTERNAL_STORAGE, Permission.WRITE_EXTERNAL_STORAGE])
         for item in self.search_path_items:
             self.ids.search_paths_list.add_widget(item)
 
@@ -59,15 +67,18 @@ class SettingsSearchPathsScreen(Screen):
         self.file_manager = MDFileManager(
             exit_manager=self.exit_manager,
             select_path=self.select_path,
-            previous=True,
+            # previous=True,
         )
-        self.file_manager.show('/')
+        default_path = '/'
+        if platform == 'android':
+            default_path = '/storage/emulated/0'
+        self.file_manager.show(default_path)
 
     def select_path(self, path):
         self.exit_manager()
         self.search_paths.append(path)
         all_paths = ','.join(self.search_paths)
-        self.config.set('search_paths', 'folders', all_paths)
+        self.config.set('search-paths', 'folders', all_paths)
         self.config.write()
 
     def exit_manager(self, *args):
@@ -97,6 +108,7 @@ class HomeScreen(MDBottomNavigationItem):
 class SongItem(OneLineAvatarListItem):
     song_id = NumericProperty()
     artwork = None
+    pass
 
 class NowPlayingAlbumArt(Image, RectangularElevationBehavior):
     pass
@@ -107,6 +119,7 @@ class SongScreen(Screen):
     song_path = StringProperty('')
     avg_artwork_color = (0, 0, 0)
     song = None
+    mPlayer = None
     song_state = StringProperty('pause')
     song_name = StringProperty('')
 
@@ -163,7 +176,10 @@ class SongScreen(Screen):
             self.song.stop()
             self.song.unload()
 
+        if platform == 'android':
+            import android_native_media_player
         self.song = SoundLoader.load(self.song_path)
+
         if self.song:
             self.song_max_length = self.song.length
             self.ids.song_total_length_label.text = self.convert_seconds_to_min(self.song_max_length)
@@ -255,7 +271,7 @@ class MainApp(MDApp):
     def build(self):
         # SEARCH FOR SONGS FROM THE GIVEN PATHS
         config = self.config
-        folders = str(config.get('search_paths', 'folders')).split(',')
+        folders = str(config.get('search-paths', 'folders')).split(',')
         id = 0
         for folder in folders:
             for format in ['mp3', 'wav']:
@@ -274,8 +290,12 @@ class MainApp(MDApp):
         return self.sm
 
     def build_config(self, config):
-        config.setdefaults('APP', {
-            'version': '1'
+        default_path = '/'
+        if platform == 'android':
+            # default_path = storagepath.get_music_dir()
+            default_path = '/storage/emulated/0/Music'
+        config.setdefaults('search-paths', {
+            'folders': default_path
         })
 
     def on_start(self):
