@@ -83,24 +83,29 @@
 <SongItem>:
     ImageLeftWidget:
         id: artwork_thumb
+        allow_stretch: True
+        keep_ratio: False
+        size_hint: 1, 1
 
 <SongScreen>:
     name: 'song_screen'
     BoxLayout:
         orientation: 'vertical'
         id: song_screen_bg
-        spacing: dp(5)
+        spacing: dp(10)
 
         NowPlayingAlbumArt:
+            size_hint: 1, 1
             size: self.texture_size
-            size_hint: None, None
+            allow_stretch: False
+            keep_ratio: False
             elevation: 10
             pos_hint: {"center_x": .5, "center_y": .5}
             id: album_art
 
         BoxLayout:
             orientation: 'horizontal'
-            size_hint_y: None
+            size_hint_y: 0.05
 
             MDLabel:
                 id: song_cur_pos_label
