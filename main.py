@@ -17,6 +17,7 @@ from kivy.core.audio import Sound, SoundLoader
 from kivy.core.image import Image as CoreImage
 from kivy.uix.image import Image
 from kivy.graphics import Color, Rectangle
+from kivy.core.window import Window
 from kivy import platform
 
 from plyer import storagepath
@@ -33,7 +34,12 @@ class MainScreen(Screen):
     Main Screen for the app
     """
     def go_to_settings(self, *args):
-        MDApp.get_running_app().sm.current = 'settings_screen'
+        sm = MDApp.get_running_app().sm
+        screen_name = 'settings_screen'
+        if sm.has_screen(screen_name):
+            sm.current = screen_name
+        else:
+            sm.add_widget(SettingsScreen(name=screen_name))
 
 class ItemWithRemove(OneLineAvatarIconListItem):
     pass
@@ -55,8 +61,6 @@ class SettingsSearchPathsScreen(Screen):
         Clock.schedule_once(self.populate_list)
 
     def populate_list(self, *args):
-        if platform == 'android':
-            request_permissions([Permission.READ_EXTERNAL_STORAGE, Permission.WRITE_EXTERNAL_STORAGE])
         for item in self.search_path_items:
             self.ids.search_paths_list.add_widget(item)
 
@@ -103,7 +107,10 @@ class SettingsScreen(Screen):
 
 
 class HomeScreen(MDBottomNavigationItem):
-    pass
+    def __init__(self, *args, **kwargs):
+        super(HomeScreen, self).__init__(*args, **kwargs)
+        if platform == 'android':
+            request_permissions([Permission.READ_EXTERNAL_STORAGE, Permission.WRITE_EXTERNAL_STORAGE])
 
 class SongItem(OneLineAvatarListItem):
     song_id = NumericProperty()
@@ -131,23 +138,25 @@ class SongScreen(Screen):
         MDApp.get_running_app().sm.current = 'main_screen'
 
     def compute_average_image_color(self, *args):
-        img = self.ids.album_art.texture
-        width, height = img.size
-
+        pixels_data = self.ids.album_art.texture.pixels
         r_total = 0
         g_total = 0
         b_total = 0
 
         count = 0
-        for x in range(0, width):
-            for y in range(0, height):
-                p = img.get_region(x,y, x+1, y+1).pixels
-                r, g, b, a = p[0], p[1], p[2], p[3]
-                # r, g, b, a = img.get_region(x,y, x+1, y+1).pixels
-                r_total += r
-                g_total += g
-                b_total += b
+        i = 0
+
+        for p in pixels_data:
+            if i == 0:
+                r_total += p
+            elif i == 1:
+                g_total += p
+            elif i == 2:
+                b_total += p
+            elif i == 3:
                 count += 1
+                i = -1
+            i += 1
 
         r_final = round((r_total/count)/255, 2)
         g_final = round((g_total/count)/255, 2)
@@ -171,7 +180,7 @@ class SongScreen(Screen):
         self.song_name = now_playing['name']
 
         self.ids.album_art.texture = now_playing['artwork']
-        # Clock.schedule_once(self.compute_average_image_color, 0.5)
+        Clock.schedule_once(self.compute_average_image_color, 0.5)
         if self.song is not None:
             self.song.stop()
             self.song.unload()
@@ -286,7 +295,6 @@ class MainApp(MDApp):
 
         self.sm = ScreenManager()
         self.sm.add_widget(MainScreen(name='main_screen'))
-        self.sm.add_widget(SettingsScreen(name='settings_screen'))
         return self.sm
 
     def build_config(self, config):
@@ -298,8 +306,15 @@ class MainApp(MDApp):
             'folders': default_path
         })
 
+    def keyboard_handler(self, window, key, scancode=None, codepoint=None, modifier=None, **kwargs):
+        if key == 27:
+            if self.sm.current == 'main_screen':
+                return False
+            self.sm.current = self.sm.previous()
+            return True
+
     def on_start(self):
-        pass
+        Window.bind(on_keyboard=self.keyboard_handler)
 
     def on_stop(self):
         pass
