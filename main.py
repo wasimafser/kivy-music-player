@@ -9,9 +9,10 @@ from kivymd.uix.list import OneLineAvatarIconListItem, OneLineAvatarListItem
 from kivymd.uix.button import MDFlatButton
 from kivymd.uix.filemanager import MDFileManager
 from kivymd.uix.behaviors import RectangularElevationBehavior
+# from kivymd.utils.fitimage import FitImage
 
 from kivy.uix.screenmanager import ScreenManager, Screen
-from kivy.properties import ListProperty, DictProperty, NumericProperty, StringProperty
+from kivy.properties import ListProperty, DictProperty, NumericProperty, StringProperty, BooleanProperty
 from kivy.clock import Clock
 from kivy.core.audio import Sound, SoundLoader
 from kivy.core.image import Image as CoreImage
@@ -28,6 +29,8 @@ import glob
 import pathlib
 import datetime
 import mutagen
+
+# Window.borderless = True
 
 class MainScreen(Screen):
     """
@@ -117,14 +120,12 @@ class SongItem(OneLineAvatarListItem):
     artwork = None
     pass
 
-class NowPlayingAlbumArt(Image, RectangularElevationBehavior):
-    pass
-
 class SongScreen(Screen):
+    loop_status = NumericProperty(0)
+    shuffle_status = BooleanProperty(False)
     song_max_length = NumericProperty(0)
     song_current_pos = NumericProperty(0)
     song_path = StringProperty('')
-    avg_artwork_color = (0, 0, 0)
     song = None
     mPlayer = None
     song_state = StringProperty('pause')
@@ -193,6 +194,8 @@ class SongScreen(Screen):
             self.song_max_length = self.song.length
             self.ids.song_total_length_label.text = self.convert_seconds_to_min(self.song_max_length)
             self.song.play()
+            self.loop_status = 1
+            self.toggle_loop()
             Clock.schedule_interval(self.manage_song, 1)
 
     def manage_song(self, *args):
@@ -225,6 +228,24 @@ class SongScreen(Screen):
             self.app.now_playing = self.app.all_songs[current_song_id-1]
         except KeyError:
             self.app.now_playing = self.app.all_songs[0]
+
+    def toggle_loop(self, *args):
+        if self.loop_status == 0:
+            self.loop_status = 1
+            self.song.loop = True
+            if platform == 'android':
+                self.song.toggle_loop(True)
+        else:
+            self.loop_status = 0
+            self.song.loop = False
+            if platform == 'android':
+                self.song.toggle_loop(False)
+
+    def toggle_shuffle(self, *args):
+        if self.shuffle_status:
+            self.shuffle_status = False
+        else:
+            self.shuffle_status = True
 
 
 class SongListScreen(MDBottomNavigationItem):
@@ -304,6 +325,9 @@ class MainApp(MDApp):
             default_path = '/storage/emulated/0/Music'
         config.setdefaults('search-paths', {
             'folders': default_path
+        })
+        config.setdefaults('graphics', {
+            'borderless': '1'
         })
 
     def keyboard_handler(self, window, key, scancode=None, codepoint=None, modifier=None, **kwargs):

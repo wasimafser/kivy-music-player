@@ -11,10 +11,12 @@
             HomeScreen:
                 name: "home_screen"
                 text: 'Home'
+                icon: 'home'
 
             SongListScreen:
                 name: "song_list_screen"
                 text: 'Songs'
+                icon: 'music'
 
 
 <ItemWithRemove>:
@@ -94,42 +96,61 @@
         id: song_screen_bg
         spacing: dp(10)
 
-        NowPlayingAlbumArt:
-            size_hint: 1, 1
-            size: self.texture_size
-            allow_stretch: False
-            keep_ratio: False
-            elevation: 10
+        MDCard:
+            size_hint: 0.95, 0.5
             pos_hint: {"center_x": .5, "center_y": .5}
-            id: album_art
+            # canvas.before:
+            #     Color:
+            #         rgba: (1, 0, 0, 0.5)
+            #     Rectangle:
+            #         size: self.size
+            #         pos: self.pos
+
+            FitImage:
+                size_hint: 1, 1
+                id: album_art
 
         BoxLayout:
-            orientation: 'horizontal'
-            size_hint_y: 0.05
+            orientation: 'vertical'
+            size_hint_y: 0.5
+            # canvas.before:
+            #     Color:
+            #         rgba: (0, 0, 1, 0.5)
+            #     Rectangle:
+            #         size: self.size
+            #         pos: self.pos
 
             MDLabel:
-                id: song_cur_pos_label
-                size_hint: 0.2, 1
-                halign: "center"
-            MDSlider:
-                id: song_slider
-                min: 0
-                max: root.song_max_length
-                value: root.song_current_pos
-                hint: False
-                on_touch_up: if self.collide_point(*args[1].pos): root.seek_song()
-            MDLabel:
-                id: song_total_length_label
-                size_hint: 0.2, 1
-                halign: "center"
+                text: root.song_name
+                halign: 'center'
 
-        MDBottomAppBar:
-            MDToolbar:
-                id: song_screen_toolbar
-                title: root.song_name
-                icon: root.song_state
-                type: 'bottom'
-                left_action_items: [["android", lambda x: root.go_to_main()], ["skip-previous", lambda x: root.prev_song()]]
-                right_action_items: [["skip-next", lambda x: root.next_song()]]
-                on_action_button: root.toggle_song_play()
-                mode: 'center'
+            BoxLayout:
+                orientation: 'horizontal'
+                size_hint_y: 0.05
+
+                MDLabel:
+                    id: song_cur_pos_label
+                    size_hint: 0.2, 1
+                    halign: "center"
+                MDSlider:
+                    id: song_slider
+                    min: 0
+                    max: root.song_max_length
+                    value: root.song_current_pos
+                    hint: False
+                    on_touch_up: if self.collide_point(*args[1].pos): root.seek_song()
+                MDLabel:
+                    id: song_total_length_label
+                    size_hint: 0.2, 1
+                    halign: "center"
+
+            BoxLayout:
+                MDBottomAppBar:
+                    MDToolbar:
+                        id: song_screen_toolbar
+                        icon: root.song_state
+                        type: 'bottom'
+                        left_action_items: [["repeat-off" if root.loop_status == 0 else "repeat-once", lambda x: root.toggle_loop()], ["skip-previous", lambda x: root.prev_song()]]
+                        right_action_items: [["skip-next", lambda x: root.next_song()], ["shuffle-disabled" if not root.shuffle_status else "shuffle-variant", lambda x: root.toggle_shuffle()]]
+                        on_action_button: root.toggle_song_play()
+                        mode: 'center'
