@@ -91,4 +91,7 @@ class SoundAndroidPlayer(Sound):
         else:
             self.seek(0.)
 
+    def toggle_loop(self, loop_status):
+        self._mediaplayer.setLooping(loop_status)
+
 SoundLoader.register(SoundAndroidPlayer)
