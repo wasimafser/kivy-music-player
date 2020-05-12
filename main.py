@@ -183,8 +183,11 @@ class SongScreen(Screen):
         self.ids.album_art.texture = now_playing['artwork']
         Clock.schedule_once(self.compute_average_image_color, 0.5)
         if self.song is not None:
-            self.song.stop()
-            self.song.unload()
+            if platform == 'macosx':
+                self.song.stop()
+            else:
+                self.song.stop()
+                self.song.unload()
 
         if platform == 'android':
             import android_native_media_player
