@@ -104,8 +104,12 @@ class SPlayScreen(MDBottomNavigationItem):
         super(SPlayScreen, self).__init__(*args, **kwargs)
         self.app = MDApp.get_running_app()
 
-        self.self_ip = socket.gethostbyname(socket.gethostname())
-        if self.self_ip.startswith("127."):
+        try:
+            self.self_ip = socket.gethostbyname(socket.gethostname())
+        except Exception as e:
+            self.self_ip = socket.gethostbyname("")
+
+        if self.self_ip.startswith("127.") or self.self_ip.startswith("0."):
             s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             s.connect(("8.8.8.8", 80))
             self.self_ip = s.getsockname()[0]
