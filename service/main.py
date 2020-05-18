@@ -10,7 +10,7 @@ def print_api(message, *args):
 
 if __name__ == '__main__':
     SERVER = OSCThreadServer()
-    SERVER.listen('localhost', port=3000, default=True)
+    SERVER.listen('0.0.0.0', port=3000, default=True)
     SERVER.bind(b'/print_api', print_api)
     while True:
         sleep(1)

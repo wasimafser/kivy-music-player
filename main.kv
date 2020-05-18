@@ -1,9 +1,13 @@
+#:import SPlayScreen sharePlay.splay.SPlayScreen
+
 <MainScreen>:
+    id: main_screen
     BoxLayout:
         orientation: "vertical"
 
         MDToolbar:
-            title: "Kivy Music Player"
+            id: main_toolbar
+            title: "Matrix Music Player"
             right_action_items: [["settings", lambda x: root.go_to_settings()]]
 
         MDBottomNavigation:
@@ -17,6 +21,10 @@
                 name: "song_list_screen"
                 text: 'Songs'
                 icon: 'music'
+
+            SPlayScreen:
+                name: "splay_screen"
+                text: 'SPLAY'
 
 
 <ItemWithRemove>:

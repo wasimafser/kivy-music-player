@@ -32,6 +32,8 @@ import glob
 import pathlib
 import datetime
 import mutagen
+import json
+import socket
 from functools import partial
 
 from oscpy.client import OSCClient
@@ -188,9 +190,9 @@ class SettingsScreen(Screen):
 class HomeScreen(MDBottomNavigationItem):
     def __init__(self, *args, **kwargs):
         super(HomeScreen, self).__init__(*args, **kwargs)
+        self.app = MDApp.get_running_app()
         if platform == 'android':
             request_permissions([Permission.READ_EXTERNAL_STORAGE, Permission.WRITE_EXTERNAL_STORAGE])
-            self.app = MDApp.get_running_app()
             self.app.ads.show_interstitial()
         self.app.client.send_message(b'/print_api', ['in home_screen'.encode('utf8'), ])
 
@@ -382,6 +384,10 @@ class MainApp(MDApp):
 
     now_playing_background = OptionProperty('default', options=['default', 'artwork-color'])
 
+    remote_id = StringProperty('')
+    remote_songs = DictProperty()
+    remote_client = None
+
     def extract_song_artwork(self, song_path, song_id):
         import io
         try:
@@ -415,6 +421,11 @@ class MainApp(MDApp):
         self.server = OSCThreadServer()
         self.server.listen(address='0.0.0.0', port=3002, default=True)
         self.server.bind(b'/print_api', print_api)
+        self.server.bind(b'/set_remote_id', self.set_remote_id)
+        self.server.bind(b'/send_all_songs', self.send_all_songs)
+        self.server.bind(b'/set_remote_songs', self.set_remote_songs)
+        self.server.bind(b'/send_song', self.send_song)
+        self.server.bind(b'/recieve_song', self.recieve_song)
 
         self.client = OSCClient('0.0.0.0', 3000)
 
@@ -436,6 +447,65 @@ class MainApp(MDApp):
         self.sm = ScreenManager()
         self.sm.add_widget(MainScreen(name='main_screen'))
         return self.sm
+
+    def send_all_songs(self, *args):
+        all_songs_new = self.all_songs
+        for id in all_songs_new.keys():
+            if 'artwork' in all_songs_new[id]: del all_songs_new[id]['artwork']
+
+        self.remote_client.send_message(b'/set_remote_songs', [json.dumps(all_songs_new).encode('utf8'), ])
+
+    def set_remote_id(self, message, *args):
+        self.remote_id = message.decode('utf8')
+
+    def set_remote_songs(self, message, *args):
+        remote_songs = message.decode('utf8')
+        self.remote_songs = json.loads(remote_songs)
+
+    def send_song(self, message, *args):
+        # song_path = message.decode('utf8')
+        song_id = message.decode('utf8')
+        song_info = self.all_songs[int(song_id)]
+        song_path = song_info['path']
+        song_name = song_info['name']
+        self.remote_client.send_message(b'/recieve_song', [song_name.encode('utf8')])
+        port = 5001
+        buffer_size = 1024
+        filesize = os.path.getsize(song_path)
+
+        s = socket.socket()
+        print(self.remote_id)
+        s.connect((self.remote_id, port))
+
+        with open(song_path, "rb") as f:
+            packet = f.read(buffer_size)
+            while packet != '':
+                s.sendall(packet)
+                packet = f.read(buffer_size)
+
+        s.close()
+
+    def recieve_song(self, message, *args):
+        song_name = message.decode('utf8')
+        print(song_name)
+        buffer_size = 1024
+
+        s = socket.socket()
+        s.bind(('0.0.0.0', 5001))
+        s.listen(5)
+        client_socket, address = s.accept()
+        print(f"{address} is connected")
+
+        with open(f"remote_temp/{song_name}.mp3", "wb+") as f:
+            packet = s.recv(buffer_size)
+            while packet != '':
+                f.write(packet)
+                packet = s.recv(buffer_size)
+
+        s.close()
+
+    def on_remote_id(self, instance, value):
+        self.remote_client = OSCClient(value, 3002)
 
     def build_config(self, config):
         default_path = '/'
