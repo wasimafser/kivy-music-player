@@ -34,6 +34,7 @@ import datetime
 import mutagen
 import json
 import socket
+import time
 from functools import partial
 
 from oscpy.client import OSCClient
@@ -463,18 +464,17 @@ class MainApp(MDApp):
         self.remote_songs = json.loads(remote_songs)
 
     def send_song(self, message, *args):
-        # song_path = message.decode('utf8')
         song_id = message.decode('utf8')
         song_info = self.all_songs[int(song_id)]
         song_path = song_info['path']
         song_name = song_info['name']
         self.remote_client.send_message(b'/recieve_song', [song_name.encode('utf8')])
+        time.sleep(1) # wait for reciever to initialize
         port = 5001
         buffer_size = 1024
         filesize = os.path.getsize(song_path)
 
         s = socket.socket()
-        print(self.remote_id)
         s.connect((self.remote_id, port))
 
         with open(song_path, "rb") as f:
@@ -497,10 +497,10 @@ class MainApp(MDApp):
         print(f"{address} is connected")
 
         with open(f"remote_temp/{song_name}.mp3", "wb+") as f:
-            packet = s.recv(buffer_size)
+            packet = client_socket.recv(buffer_size)
             while packet != '':
                 f.write(packet)
-                packet = s.recv(buffer_size)
+                packet = client_socket.recv(buffer_size)
 
         s.close()
 
