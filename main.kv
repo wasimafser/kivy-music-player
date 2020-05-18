@@ -39,17 +39,51 @@
                 title: "Search Paths"
                 icon: "plus"
                 type: 'bottom'
-                left_action_items: [["android", lambda x: root.go_to_settings()]]
+                left_action_items: [["arrow-left", lambda x: root.go_to_settings()]]
                 on_action_button: root.launch_file_manager()
                 mode: 'end'
 
+<SettingsNowPlayingScreen>:
+    name: 'now_playing_settings'
+    BoxLayout:
+        orientation: 'vertical'
+
+        ScrollView:
+
+            MDList:
+                TwoLineIconListItem:
+                    text: "Background"
+                    secondary_text: "background of the now playing screen"
+                    on_press: root.open_background_selector()
+
+                    IconLeftWidget:
+                        icon: 'format-color-fill'
+
+<SettingsThemeScreen>:
+    id: theme_settings
+    name: 'theme_settings'
+    BoxLayout:
+        orientation: 'vertical'
+
+        ScrollView:
+            MDList:
+                TwoLineIconListItem:
+                    text: "Colors"
+                    secondary_text: "theme, accent, style"
+                    on_press: root.open_theme_picker()
+
+                    IconLeftWidget:
+                        icon: 'format-color-fill'
+
+
 <SettingsScreen>:
+    id: settings_screen
     BoxLayout:
         orientation: 'vertical'
 
         MDToolbar:
             title: "Settings"
-            left_action_items: [["android", lambda x: root.go_to_main()]]
+            left_action_items: [["arrow-left", lambda x: root.go_to_main()]]
 
         ScrollView:
 
@@ -62,7 +96,23 @@
                     on_press: root.go_to_search_paths()
 
                     IconLeftWidget:
-                        icon: 'search'
+                        icon: 'folder-search'
+
+                TwoLineIconListItem:
+                    text: "App Theme"
+                    secondary_text: "change the looks of the app"
+                    on_press: root.go_to_themes()
+
+                    IconLeftWidget:
+                        icon: 'format-color-fill'
+
+                TwoLineIconListItem:
+                    text: "Now Playing"
+                    secondary_text: "change the looks of the now-playing screen"
+                    on_press: root.go_to_now_playing()
+
+                    IconLeftWidget:
+                        icon: 'play-circle-outline'
 
 
 
@@ -126,6 +176,7 @@
             MDLabel:
                 text: root.song_name
                 halign: 'center'
+                theme_text_color: 'Primary'
 
             BoxLayout:
                 orientation: 'horizontal'
@@ -135,6 +186,7 @@
                     id: song_cur_pos_label
                     size_hint: 0.2, 1
                     halign: "center"
+                    theme_text_color: 'Primary'
                 MDSlider:
                     id: song_slider
                     min: 0
@@ -146,6 +198,7 @@
                     id: song_total_length_label
                     size_hint: 0.2, 1
                     halign: "center"
+                    theme_text_color: 'Primary'
 
             BoxLayout:
                 MDBottomAppBar:

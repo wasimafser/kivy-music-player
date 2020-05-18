@@ -5,14 +5,15 @@ os.environ['KIVY_AUDIO'] = "ffpyplayer"
 from kivymd.app import MDApp
 from kivymd.uix.bottomnavigation import MDBottomNavigationItem
 from kivymd.uix.dialog import MDDialog
-from kivymd.uix.list import OneLineAvatarIconListItem, OneLineAvatarListItem
+from kivymd.uix.list import OneLineAvatarIconListItem, OneLineAvatarListItem, TwoLineListItem
 from kivymd.uix.button import MDFlatButton
 from kivymd.uix.filemanager import MDFileManager
 from kivymd.uix.behaviors import RectangularElevationBehavior
+from kivymd.uix.picker import MDThemePicker
 # from kivymd.utils.fitimage import FitImage
 
 from kivy.uix.screenmanager import ScreenManager, Screen
-from kivy.properties import ListProperty, DictProperty, NumericProperty, StringProperty, BooleanProperty
+from kivy.properties import ListProperty, DictProperty, NumericProperty, StringProperty, BooleanProperty, ObjectProperty, OptionProperty
 from kivy.clock import Clock
 from kivy.core.audio import Sound, SoundLoader
 from kivy.core.image import Image as CoreImage
@@ -23,12 +24,18 @@ from kivy import platform
 
 from plyer import storagepath
 if platform == 'android':
+    from jnius import autoclass
     from android.permissions import request_permissions, Permission
+    from kivmob import KivMob, TestIds
 
 import glob
 import pathlib
 import datetime
 import mutagen
+from functools import partial
+
+from oscpy.client import OSCClient
+from oscpy.server import OSCThreadServer
 
 # Window.borderless = True
 
@@ -94,19 +101,88 @@ class SettingsSearchPathsScreen(Screen):
         self.file_manager.close()
 
 
+class SettingsThemeScreen(Screen):
+
+    def __init__(self, *args, **kwargs):
+        super(SettingsThemeScreen, self).__init__(*args, *kwargs)
+        self.app = MDApp.get_running_app()
+        self.theme_cls = self.app.theme_cls
+        self.config = self.app.config
+
+        self.theme_cls.bind(theme_style=partial(self.theme_changed, 'theme_style'),
+                            primary_palette=partial(self.theme_changed, 'primary_palette'),
+                            accent_palette=partial(self.theme_changed, 'accent_palette'))
+
+    def theme_changed(self, *args, **kwargs):
+        self.config.set('theme', args[0], args[2])
+        self.config.write()
+
+    def open_theme_picker(self, *args):
+        theme_picker = MDThemePicker()
+        theme_picker.open()
+
+
+class SettingsNowPlayingScreen(Screen):
+    dialog = ObjectProperty(None)
+
+    def __init__(self, *args, **kwargs):
+        super(SettingsNowPlayingScreen, self).__init__(*args, **kwargs)
+        self.app = MDApp.get_running_app()
+        self.config = self.app.config
+
+    def set_now_playing_background(self, bg, *args):
+        # print(args)
+        if self.collide_point(*args[1].pos):
+            # print(bg)
+            self.app.now_playing_background = bg
+            self.config.set('now-playing', 'background', bg)
+            self.config.write()
+
+    def open_background_selector(self, *args):
+        if not self.dialog:
+            self.dialog = MDDialog(
+                title="Choose background",
+                type="simple",
+                items=[
+                    TwoLineListItem(text="Default", secondary_text="the default theme background", on_touch_down=partial(self.set_now_playing_background, 'default')),
+                    TwoLineListItem(text="Artwork Color", secondary_text="the dominant color from artwork", on_touch_down=partial(self.set_now_playing_background, 'artwork-color')),
+                    TwoLineListItem()
+                ],
+            )
+        self.dialog.open()
+
+
 class SettingsScreen(Screen):
     dialog = None
+
+    def __init__(self, *args, **kwargs):
+        super(SettingsScreen, self).__init__(*args, **kwargs)
+        self.sm = MDApp.get_running_app().sm
 
     def go_to_main(self, *args):
         MDApp.get_running_app().sm.current = 'main_screen'
 
-    def go_to_search_paths(self, *args):
-        sm = MDApp.get_running_app().sm
-        screen_name = 'settings_search_paths'
-        if sm.has_screen(screen_name):
-            sm.current = screen_name
+    def go_to_themes(self, *args):
+        screen_name = 'theme_settings'
+        if self.sm.has_screen(screen_name):
+            self.sm.current = screen_name
         else:
-            sm.add_widget(SettingsSearchPathsScreen())
+            self.sm.add_widget(SettingsThemeScreen())
+
+    def go_to_now_playing(self, *args):
+        screen_name = 'now_playing_settings'
+        if self.sm.has_screen(screen_name):
+            self.sm.current = screen_name
+        else:
+            self.sm.add_widget(SettingsNowPlayingScreen())
+
+    def go_to_search_paths(self, *args):
+        screen_name = 'settings_search_paths'
+        if self.sm.has_screen(screen_name):
+            self.sm.current = screen_name
+        else:
+            self.sm.add_widget(SettingsSearchPathsScreen())
+
 
 
 class HomeScreen(MDBottomNavigationItem):
@@ -114,6 +190,9 @@ class HomeScreen(MDBottomNavigationItem):
         super(HomeScreen, self).__init__(*args, **kwargs)
         if platform == 'android':
             request_permissions([Permission.READ_EXTERNAL_STORAGE, Permission.WRITE_EXTERNAL_STORAGE])
+            self.app = MDApp.get_running_app()
+            self.app.ads.show_interstitial()
+        self.app.client.send_message(b'/print_api', ['in home_screen'.encode('utf8'), ])
 
 class SongItem(OneLineAvatarListItem):
     song_id = NumericProperty()
@@ -139,6 +218,11 @@ class SongScreen(Screen):
         MDApp.get_running_app().sm.current = 'main_screen'
 
     def compute_average_image_color(self, *args):
+        if self.app.now_playing_background != 'artwork-color':
+            bg = self.ids.song_screen_bg
+            bg.canvas.before.clear()
+            return
+
         pixels_data = self.ids.album_art.texture.pixels
         r_total = 0
         g_total = 0
@@ -173,7 +257,10 @@ class SongScreen(Screen):
         super(SongScreen, self).__init__(*args, **kwargs)
         self.app = MDApp.get_running_app()
         self.app.bind(now_playing = self.play_song)
+        self.app.bind(now_playing_background = self.compute_average_image_color)
         self.play_song()
+
+        self.ids.song_screen_toolbar.remove_notch()
 
     def play_song(self, *args):
         now_playing = self.app.now_playing
@@ -181,7 +268,8 @@ class SongScreen(Screen):
         self.song_name = now_playing['name']
 
         self.ids.album_art.texture = now_playing['artwork']
-        Clock.schedule_once(self.compute_average_image_color, 0.5)
+        if self.app.config.get('now-playing', 'background') == 'artwork-color':
+            Clock.schedule_once(self.compute_average_image_color, 0.5)
         if self.song is not None:
             if platform == 'macosx':
                 self.song.stop()
@@ -283,10 +371,16 @@ class SongListScreen(MDBottomNavigationItem):
             sm.current = screen_name
 
 
+SERVICE_NAME = u'com.matrix.music_player.ServiceMatrix'
+
+def print_api(message, *args):
+    print("Message from service : ", message)
 
 class MainApp(MDApp):
     all_songs = DictProperty()
     now_playing = DictProperty()
+
+    now_playing_background = OptionProperty('default', options=['default', 'artwork-color'])
 
     def extract_song_artwork(self, song_path, song_id):
         import io
@@ -302,6 +396,28 @@ class MainApp(MDApp):
         return artwork
 
     def build(self):
+        self.service = None
+        # ANDROID SPECIFIC SETUPS
+        if platform == 'android':
+            # ADS
+            self.ads = KivMob('ca-app-pub-9614085129932704~9292191302')
+            # self.ads = KivMob(TestIds.APP)
+            self.ads.new_interstitial('ca-app-pub-9614085129932704/7878488547')
+            # self.ads.new_interstitial(TestIds.INTERSTITIAL)
+            self.ads.request_interstitial()
+            # SERVICE
+            self.service = autoclass(SERVICE_NAME)
+            mActivity = autoclass(u'org.kivy.android.PythonActivity').mActivity
+            argument = ''
+            self.service.start(mActivity, argument)
+
+        # SERVER - CLIENT IMPLEMENATION
+        self.server = OSCThreadServer()
+        self.server.listen(address='0.0.0.0', port=3002, default=True)
+        self.server.bind(b'/print_api', print_api)
+
+        self.client = OSCClient('0.0.0.0', 3000)
+
         # SEARCH FOR SONGS FROM THE GIVEN PATHS
         config = self.config
         folders = str(config.get('search-paths', 'folders')).split(',')
@@ -332,6 +448,14 @@ class MainApp(MDApp):
         config.setdefaults('graphics', {
             'borderless': '1'
         })
+        config.setdefaults('theme', {
+            'theme_style': 'Light',
+            'primary_palette': 'Blue',
+            'accent_palette': 'Amber'
+        })
+        config.setdefaults('now-playing', {
+            'background': 'default'
+        })
 
     def keyboard_handler(self, window, key, scancode=None, codepoint=None, modifier=None, **kwargs):
         if key == 27:
@@ -341,16 +465,42 @@ class MainApp(MDApp):
             return True
 
     def on_start(self):
+        # ADS
+        # if platform == 'android':
+        #     self.ads.show_interstitial()
+
+        # Redefine KivyMD's Dark Color Palette to match Material Design Spec
+        from kivymd.color_definitions import colors
+        colors["Dark"] = {
+            "StatusBar": "000000",
+            "AppBar": "1f1f1f",
+            "Background": "121212",
+            "CardsDialogs": "1d1d1d",
+            "FlatButtonDown": "999999",
+        }
+
+        # APPLY THEMING HERE FOR NOW
+        config = self.config
+        self.theme_cls.theme_style = config.get('theme', 'theme_style')
+        self.theme_cls.primary_palette = config.get('theme', 'primary_palette')
+        self.theme_cls.accent_palette = config.get('theme', 'accent_palette')
+
+        self.now_playing_background = config.get('now-playing', 'background')
+
         Window.bind(on_keyboard=self.keyboard_handler)
 
     def on_stop(self):
-        pass
+        if self.service:
+            self.service.stop()
+        else:
+            pass
 
     def on_pause(self):
         return True
 
     def on_resume(self):
-        pass
+        if platform == 'android':
+            self.ads.request_interstitial()
 
 
 
