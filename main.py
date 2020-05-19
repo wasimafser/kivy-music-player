@@ -479,8 +479,8 @@ class MainApp(MDApp):
 
         with open(song_path, "rb") as f:
             packet = f.read(buffer_size)
-            while packet != '':
-                s.sendall(packet)
+            while packet:
+                s.send(packet)
                 packet = f.read(buffer_size)
 
         s.close()
@@ -491,18 +491,36 @@ class MainApp(MDApp):
         buffer_size = 1024
 
         s = socket.socket()
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         s.bind(('0.0.0.0', 5001))
         s.listen(5)
         client_socket, address = s.accept()
-        print(f"{address} is connected")
 
-        with open(f"remote_temp/{song_name}.mp3", "wb+") as f:
+        i = 0
+        with open(f"remote_temp/{song_name}.mp3", "wb") as f:
             packet = client_socket.recv(buffer_size)
-            while packet != '':
+            while packet:
                 f.write(packet)
                 packet = client_socket.recv(buffer_size)
 
         s.close()
+
+        song_path = f'remote_temp/{song_name}.mp3'
+
+        self.all_songs[999] = {
+            'id': 999,
+            'path': song_path,
+            'name': song_name,
+            'artwork': self.extract_song_artwork(song_path, 999)
+        }
+        self.now_playing = self.all_songs[999]
+
+        screen_name = 'song_screen'
+        if self.sm.has_screen(screen_name):
+            self.sm.current = screen_name
+        else:
+            self.sm.add_widget(SongScreen())
+            self.sm.current = screen_name
 
     def on_remote_id(self, instance, value):
         self.remote_client = OSCClient(value, 3002)
