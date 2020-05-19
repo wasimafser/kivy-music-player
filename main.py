@@ -35,6 +35,7 @@ import mutagen
 import json
 import socket
 import time
+import io
 from functools import partial
 
 from oscpy.client import OSCClient
@@ -389,16 +390,19 @@ class MainApp(MDApp):
     remote_songs = DictProperty()
     remote_client = None
 
-    def extract_song_artwork(self, song_path, song_id):
-        import io
+    def extract_song_artwork(self, song_path, song_id, *args):
         try:
             song_file = mutagen.File(song_path)
             artwork_data = song_file.tags['APIC:'].data
             artwork = CoreImage(io.BytesIO(artwork_data), ext='png', filename=f"{song_id}.png", mipmap=True).texture
         except Exception as e:
-            print("has error")
+            # print("has error", e)
             artwork_data = io.BytesIO(open('artwork/default.jpg', 'rb').read())
             artwork = CoreImage(artwork_data, ext='png', mipmap=True).texture
+
+        if song_id == 'remote':
+            self.all_songs[song_id]['artwork'] = artwork
+            return
 
         return artwork
 
@@ -506,13 +510,20 @@ class MainApp(MDApp):
 
         song_path = f'remote_temp/{song_name}.mp3'
 
-        self.all_songs[999] = {
-            'id': 999,
+        self.all_songs['remote'] = {
+            'id': 'remote',
             'path': song_path,
             'name': song_name,
-            'artwork': self.extract_song_artwork(song_path, 999)
+            # 'artwork':
         }
-        self.now_playing = self.all_songs[999]
+        Clock.schedule_once(partial(self.extract_song_artwork, song_path, 'remote'))
+        Clock.schedule_once(self.play_remote_song, 2)
+
+    def play_remote_song(self, *args):
+        # while self.all_songs['remote']['artwork'] is None:
+        #     pass
+        self.now_playing = self.all_songs['remote']
+        print(self.now_playing)
 
         screen_name = 'song_screen'
         if self.sm.has_screen(screen_name):
