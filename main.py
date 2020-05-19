@@ -479,7 +479,7 @@ class MainApp(MDApp):
 
         with open(song_path, "rb") as f:
             packet = f.read(buffer_size)
-            while packet:
+            while len(packet) != 0:
                 s.send(packet)
                 packet = f.read(buffer_size)
 
@@ -496,10 +496,9 @@ class MainApp(MDApp):
         s.listen(5)
         client_socket, address = s.accept()
 
-        i = 0
         with open(f"remote_temp/{song_name}.mp3", "wb") as f:
             packet = client_socket.recv(buffer_size)
-            while packet:
+            while len(packet) != 0:
                 f.write(packet)
                 packet = client_socket.recv(buffer_size)
 
