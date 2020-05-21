@@ -66,7 +66,7 @@ class MainApp(MDApp):
         self.service = None
         # ANDROID SPECIFIC SETUPS
         if platform == 'android':
-            mActivity = autoclass('org.kivy.android.AndroidActivity').mActivity
+            mActivity = autoclass('org.kivy.android.PythonActivity').mActivity
             currentActivity = cast('android.app.Activity', mActivity)
             context = cast('android.content.Context', currentActivity.getApplicationContext())
 
