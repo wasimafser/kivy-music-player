@@ -13,7 +13,7 @@ from kivy.utils import platform
 
 from plyer import storagepath
 if platform == 'android':
-    from jnius import autoclass
+    from jnius import autoclass, cast
     from kivmob import KivMob, TestIds
 
 import glob
@@ -74,10 +74,10 @@ class MainApp(MDApp):
             # self.ads = KivMob('ca-app-pub-9614085129932704~9292191302')
             # self.ads.new_interstitial('ca-app-pub-9614085129932704/7878488547')
 
-            # self.ads = KivMob(TestIds.APP)
-            # self.ads.new_interstitial(TestIds.INTERSTITIAL)
+            self.ads = KivMob(TestIds.APP)
+            self.ads.new_interstitial(TestIds.INTERSTITIAL)
 
-            # self.ads.request_interstitial()
+            self.ads.request_interstitial()
 
             # AMAZON ADS
             AdRegistration = autoclass("com.amazon.device.ads.AdRegistration")
