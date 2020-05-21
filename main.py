@@ -83,7 +83,7 @@ class MainApp(MDApp):
             AdRegistration = autoclass("com.amazon.device.ads.AdRegistration")
             AdRegistration.enableLogging(True)
             AdRegistration.enableTesting(True)
-            AdRegistration.setAppKey("<MY_APP_KEY>")
+            AdRegistration.setAppKey("1d71349359254e938b7d7c34f41a0395")
 
             interstitialAd = autoclass("com.amazon.device.ads.InterstitialAd")
             self.InterstitialAd = interstitialAd(context)
