@@ -18,9 +18,9 @@ Builder.load_string('''
             halign: 'center'
             position: {'center_x': 0.5, 'center_y': '0.5'}
 
-        # MDFlatButton:
-        #     text: "LOAD AD"
-        #     on_release: root._load_ad()
+        MDFlatButton:
+            text: "LOAD AD"
+            on_release: root._load_ad()
 ''')
 
 class HomeScreen(MDBottomNavigationItem):
@@ -31,3 +31,6 @@ class HomeScreen(MDBottomNavigationItem):
             request_permissions([Permission.READ_EXTERNAL_STORAGE, Permission.WRITE_EXTERNAL_STORAGE])
             # self.app.ads.show_interstitial()
         self.app.client.send_message(b'/print_api', ['in home_screen'.encode('utf8'), ])
+
+    def _load_ad(self, *args):
+        self.app.InterstitialAd.showAd()

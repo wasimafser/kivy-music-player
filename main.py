@@ -66,12 +66,30 @@ class MainApp(MDApp):
         self.service = None
         # ANDROID SPECIFIC SETUPS
         if platform == 'android':
-            # ADS
-            self.ads = KivMob('ca-app-pub-9614085129932704~9292191302')
+            mActivity = autoclass('org.kivy.android.AndroidActivity').mActivity
+            currentActivity = cast('android.app.Activity', mActivity)
+            context = cast('android.content.Context', currentActivity.getApplicationContext())
+
+            # ADMOB ADS
+            # self.ads = KivMob('ca-app-pub-9614085129932704~9292191302')
+            # self.ads.new_interstitial('ca-app-pub-9614085129932704/7878488547')
+
             # self.ads = KivMob(TestIds.APP)
-            self.ads.new_interstitial('ca-app-pub-9614085129932704/7878488547')
             # self.ads.new_interstitial(TestIds.INTERSTITIAL)
-            self.ads.request_interstitial()
+
+            # self.ads.request_interstitial()
+
+            # AMAZON ADS
+            AdRegistration = autoclass("com.amazon.device.ads.AdRegistration")
+            AdRegistration.enableLogging(True)
+            AdRegistration.enableTesting(True)
+            AdRegistration.setAppKey("<MY_APP_KEY>")
+
+            interstitialAd = autoclass("com.amazon.device.ads.InterstitialAd")
+            self.InterstitialAd = interstitialAd(context)
+            self.InterstitialAd.loadAd()
+
+
             # SERVICE
             self.service = autoclass(SERVICE_NAME)
             mActivity = autoclass(u'org.kivy.android.PythonActivity').mActivity
