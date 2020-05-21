@@ -41,7 +41,7 @@ from functools import partial
 from oscpy.client import OSCClient
 from oscpy.server import OSCThreadServer
 
-from screens.mainscreen import MainScreen
+from screens.main import MainScreen
 
 SERVICE_NAME = u'com.matrix.music_player.ServiceMatrix'
 

@@ -1,5 +1,87 @@
-from kivy.app import MDApp
+from kivymd.app import MDApp
 from kivy.uix.screenmanager import Screen
+
+from kivy.lang.builder import Builder
+from kivy.properties import NumericProperty, BooleanProperty, StringProperty
+from kivy.utils import platform
+from kivy.core.audio import Sound, SoundLoader
+from kivy.clock import Clock
+
+import datetime
+
+Builder.load_string('''
+<SongScreen>:
+    name: 'song_screen'
+    BoxLayout:
+        orientation: 'vertical'
+        id: song_screen_bg
+        spacing: dp(10)
+
+        BoxLayout:
+            size_hint_y: 0.05
+
+        MDCard:
+            size_hint: 0.95, 0.5
+            pos_hint: {"center_x": .5, "center_y": .5}
+            # canvas:
+            #     Color:
+            #         rgba: (0, 0, 0, 0)
+            #     Rectangle:
+            #         size: self.size
+            #         pos: self.pos
+
+            FitImage:
+                size_hint: 1, 1
+                id: album_art
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint_y: 0.5
+            # canvas.before:
+            #     Color:
+            #         rgba: (0, 0, 1, 0.5)
+            #     Rectangle:
+            #         size: self.size
+            #         pos: self.pos
+
+            MDLabel:
+                text: root.song_name
+                halign: 'center'
+                theme_text_color: 'Primary'
+
+            BoxLayout:
+                orientation: 'horizontal'
+                size_hint_y: 0.05
+
+                MDLabel:
+                    id: song_cur_pos_label
+                    size_hint: 0.2, 1
+                    halign: "center"
+                    theme_text_color: 'Primary'
+                MDSlider:
+                    id: song_slider
+                    min: 0
+                    max: root.song_max_length
+                    value: root.song_current_pos
+                    hint: False
+                    on_touch_up: if self.collide_point(*args[1].pos): root.seek_song()
+                MDLabel:
+                    id: song_total_length_label
+                    size_hint: 0.2, 1
+                    halign: "center"
+                    theme_text_color: 'Primary'
+
+            BoxLayout:
+                MDBottomAppBar:
+                    MDToolbar:
+                        id: song_screen_toolbar
+                        icon: root.song_state
+                        type: 'bottom'
+                        left_action_items: [["repeat-off" if root.loop_status == 0 else "repeat-once", lambda x: root.toggle_loop()], ["skip-previous", lambda x: root.prev_song()]]
+                        right_action_items: [["skip-next", lambda x: root.next_song()], ["shuffle-disabled" if not root.shuffle_status else "shuffle-variant", lambda x: root.toggle_shuffle()]]
+                        on_action_button: root.toggle_song_play()
+                        mode: 'center'
+''')
 
 class SongScreen(Screen):
     loop_status = NumericProperty(0)

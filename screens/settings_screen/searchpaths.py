@@ -1,7 +1,38 @@
-from kivy.app import MDApp
+from kivymd.app import MDApp
 from kivymd.uix.list import OneLineAvatarIconListItem
 from kivy.uix.screenmanager import Screen
 from kivymd.uix.filemanager import MDFileManager
+
+from kivy.lang.builder import Builder
+from kivy.properties import ListProperty
+from kivy.clock import Clock
+from kivy.utils import platform
+
+Builder.load_string('''
+<ItemWithRemove>:
+
+    IconRightWidget:
+        icon: 'minus'
+
+<SettingsSearchPathsScreen>:
+    name: 'settings_search_paths'
+    BoxLayout:
+        orientation: 'vertical'
+
+        ScrollView:
+
+            MDList:
+                id: search_paths_list
+
+        MDBottomAppBar:
+            MDToolbar:
+                title: "Search Paths"
+                icon: "plus"
+                type: 'bottom'
+                left_action_items: [["arrow-left", lambda x: root.go_to_settings()]]
+                on_action_button: root.launch_file_manager()
+                mode: 'end'
+''')
 
 class ItemWithRemove(OneLineAvatarIconListItem):
     pass

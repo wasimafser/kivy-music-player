@@ -2,6 +2,29 @@ from kivymd.app import MDApp
 from kivymd.uix.bottomnavigation import MDBottomNavigationItem
 from kivymd.uix.list import OneLineAvatarListItem
 
+from kivy.properties import NumericProperty
+from kivy.clock import Clock
+from kivy.lang.builder import Builder
+
+
+Builder.load_string('''
+<SongItem>:
+    ImageLeftWidget:
+        id: artwork_thumb
+        allow_stretch: True
+        keep_ratio: False
+        size_hint: 1, 1
+
+<SongListScreen>:
+    BoxLayout:
+        orientation: "vertical"
+
+        ScrollView:
+            MDList:
+                id: songs_list
+''')
+
+
 class SongItem(OneLineAvatarListItem):
     song_id = NumericProperty()
     artwork = None
@@ -35,5 +58,6 @@ class SongListScreen(MDBottomNavigationItem):
         if sm.has_screen(screen_name):
             sm.current = screen_name
         else:
+            from screens.song import SongScreen
             sm.add_widget(SongScreen())
             sm.current = screen_name
