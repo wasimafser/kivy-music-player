@@ -1,31 +1,19 @@
 import os
 os.environ['KIVY_AUDIO'] = "ffpyplayer"
-# import ffpyplayer.player.core
 
 from kivymd.app import MDApp
-from kivymd.uix.bottomnavigation import MDBottomNavigationItem
-from kivymd.uix.dialog import MDDialog
-from kivymd.uix.list import OneLineAvatarIconListItem, OneLineAvatarListItem, TwoLineListItem
-from kivymd.uix.button import MDFlatButton
-from kivymd.uix.filemanager import MDFileManager
-from kivymd.uix.behaviors import RectangularElevationBehavior
-from kivymd.uix.picker import MDThemePicker
-# from kivymd.utils.fitimage import FitImage
 
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.properties import ListProperty, DictProperty, NumericProperty, StringProperty, BooleanProperty, ObjectProperty, OptionProperty
 from kivy.clock import Clock
-from kivy.core.audio import Sound, SoundLoader
 from kivy.core.image import Image as CoreImage
 from kivy.uix.image import Image
-from kivy.graphics import Color, Rectangle
 from kivy.core.window import Window
-from kivy import platform
+from kivy.utils import platform
 
 from plyer import storagepath
 if platform == 'android':
     from jnius import autoclass
-    from android.permissions import request_permissions, Permission
     from kivmob import KivMob, TestIds
 
 import glob
@@ -43,7 +31,7 @@ from oscpy.server import OSCThreadServer
 
 from screens.main import MainScreen
 
-SERVICE_NAME = u'com.matrix.music_player.ServiceMatrix'
+SERVICE_NAME = u'matrix.music_player.ServiceMatrix'
 
 def print_api(message, *args):
     print("Message from service : ", message)
