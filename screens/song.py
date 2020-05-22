@@ -94,6 +94,10 @@ class SongScreen(Screen):
     song_state = StringProperty('pause')
     song_name = StringProperty('')
 
+    songs_counter = NumericProperty(0)
+    ADMOB_LOADED_PREVIOUSLY = BooleanProperty(False)
+    AMAZON_LOADED_PREVIOUSLY = BooleanProperty(False)
+
     def convert_seconds_to_min(self, sec):
         val = str(datetime.timedelta(seconds = sec)).split(':')
         return f'{val[1]}:{val[2].split(".")[0]}'
@@ -137,6 +141,15 @@ class SongScreen(Screen):
             Color(r_final, g_final, b_final)
             Rectangle(size=bg.size, pos=bg.pos)
 
+    def on_songs_counter(self, instance, value, *args):
+        if value % 3 == 0:
+            if not self.AMAZON_LOADED_PREVIOUSLY:
+                self.app.InterstitialAd.loadAd()
+            elif not self.ADMOB_LOADED_PREVIOUSLY:
+                self.app.ads.request_interstitial()
+        else:
+            pass
+
     def __init__(self, *args, **kwargs):
         super(SongScreen, self).__init__(*args, **kwargs)
         self.app = MDApp.get_running_app()
@@ -147,6 +160,23 @@ class SongScreen(Screen):
         self.ids.song_screen_toolbar.remove_notch()
 
     def play_song(self, *args):
+        # SHOW AD ON PAUSE AND IF NUMBER OF SONGS PLAYED IS MULTIPLE Of 3
+        if self.songs_counter % 3 == 0:
+            # LOAD THE ADD WHICH IS AVAILABLE AND THE OTHER LATER
+            if self.app.InterstitialAd.isReady() and not self.AMAZON_LOADED_PREVIOUSLY:
+                self.app.InterstitialAd.showAd()
+                self.AMAZON_LOADED_PREVIOUSLY = True
+                self.ADMOB_LOADED_PREVIOUSLY = False
+            elif self.app.ads.is_interstitial_loaded() and not self.ADMOB_LOADED_PREVIOUSLY:
+                self.app.ads.show_interstitial()
+                self.ADMOB_LOADED_PREVIOUSLY = True
+                self.AMAZON_LOADED_PREVIOUSLY = False
+            else:
+                self.AMAZON_LOADED_PREVIOUSLY = False
+                print("BOTH ADS NOT LOADED")
+
+        self.songs_counter += 1
+
         now_playing = self.app.now_playing
         self.song_path = now_playing['path']
         self.song_name = now_playing['name']
@@ -186,6 +216,7 @@ class SongScreen(Screen):
         if self.song.state == 'play':
             self.song_state = 'play'
             self.song.stop()
+
         elif self.song.state == 'stop':
             self.song_state = 'pause'
             self.song.play()

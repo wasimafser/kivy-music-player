@@ -19,13 +19,13 @@ Builder.load_string('''
             halign: 'center'
             position: {'center_x': 0.5, 'center_y': '0.5'}
 
-        MDFlatButton:
-            text: "LOAD AMAZON AD"
-            on_release: root._load_ad('amazon')
-
-        MDFlatButton:
-            text: "LOAD ADMOB AD"
-            on_release: root._load_ad('admob')
+        # MDFlatButton:
+        #     text: "LOAD AMAZON AD"
+        #     on_release: root._load_ad('amazon')
+        #
+        # MDFlatButton:
+        #     text: "LOAD ADMOB AD"
+        #     on_release: root._load_ad('admob')
 ''')
 
 class HomeScreen(MDBottomNavigationItem):

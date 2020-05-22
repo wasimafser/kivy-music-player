@@ -14,7 +14,6 @@ from kivy.utils import platform
 from plyer import storagepath
 if platform == 'android':
     from jnius import autoclass, cast
-    from kivmob import KivMob, TestIds
 
 import glob
 import pathlib
@@ -71,11 +70,29 @@ class MainApp(MDApp):
             context = cast('android.content.Context', currentActivity.getApplicationContext())
 
             # ADMOB ADS
-            # self.ads = KivMob('ca-app-pub-9614085129932704~9292191302')
-            # self.ads.new_interstitial('ca-app-pub-9614085129932704/7878488547')
+            AdColonyAppOptions = autoclass("com.adcolony.sdk.AdColonyAppOptions")
+            appOptions = AdColonyAppOptions()
+            appOptions.setGDPRConsentString("1")
+            appOptions.setGDPRRequired(True)
 
-            self.ads = KivMob(TestIds.APP)
-            self.ads.new_interstitial(TestIds.INTERSTITIAL)
+            adcolony = autoclass("com.adcolony.sdk.AdColony")
+            AdColony = adcolony()
+            jString = autoclass('java.lang.String')
+            AdColony.configure(currentActivity, appOptions, jString("app5cf2981d26c14dd4a9"), jString("vz4458ff2a0207406b8b"))
+            # AdColonyMediationAdapter = autoclass("com.google.ads.mediation.adcolony.AdColonyMediationAdapter")
+            # appOptions = AdColonyMediationAdapter.getAppOptions()
+            # appOptions.setGDPRConsentString("1")
+            # appOptions.setGDPRRequired(True)
+
+            print(appOptions.getGDPRConsentString(), appOptions.getGDPRRequired())
+
+            from kivmob import KivMob
+
+            self.ads = KivMob('ca-app-pub-9614085129932704~9292191302')
+            self.ads.new_interstitial('ca-app-pub-9614085129932704/7878488547')
+
+            # self.ads = KivMob(TestIds.APP)
+            # self.ads.new_interstitial(TestIds.INTERSTITIAL)
 
             self.ads.request_interstitial()
 
@@ -113,7 +130,7 @@ class MainApp(MDApp):
         folders = str(config.get('search-paths', 'folders')).split(',')
         id = 0
         for folder in folders:
-            for format in ['mp3', 'wav']:
+            for format in ["mp3", "aac", "3gp", "flac", "mkv", "wav", "ogg"]:
                 for file in glob.glob(f"{folder}/*.{format}"):
                     self.all_songs[id] = {
                         'id': id,
