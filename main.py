@@ -70,21 +70,19 @@ class MainApp(MDApp):
             context = cast('android.content.Context', currentActivity.getApplicationContext())
 
             # ADMOB ADS
-            AdColonyAppOptions = autoclass("com.adcolony.sdk.AdColonyAppOptions")
-            appOptions = AdColonyAppOptions()
-            appOptions.setGDPRConsentString("1")
-            appOptions.setGDPRRequired(True)
-
-            adcolony = autoclass("com.adcolony.sdk.AdColony")
-            AdColony = adcolony()
-            jString = autoclass('java.lang.String')
-            AdColony.configure(currentActivity, appOptions, jString("app5cf2981d26c14dd4a9"), jString("vz4458ff2a0207406b8b"))
-            # AdColonyMediationAdapter = autoclass("com.google.ads.mediation.adcolony.AdColonyMediationAdapter")
-            # appOptions = AdColonyMediationAdapter.getAppOptions()
+            # AdColonyAppOptions = autoclass("com.adcolony.sdk.AdColonyAppOptions")
+            # appOptions = AdColonyAppOptions()
             # appOptions.setGDPRConsentString("1")
             # appOptions.setGDPRRequired(True)
-
-            print(appOptions.getGDPRConsentString(), appOptions.getGDPRRequired())
+            #
+            # adcolony = autoclass("com.adcolony.sdk.AdColony")
+            # AdColony = adcolony()
+            # jString = autoclass('java.lang.String')
+            # AdColony.configure(currentActivity, appOptions, jString("app5cf2981d26c14dd4a9"), jString("vz4458ff2a0207406b8b"))
+            AdColonyMediationAdapter = autoclass("com.google.ads.mediation.adcolony.AdColonyMediationAdapter")
+            appOptions = AdColonyMediationAdapter.getAppOptions()
+            appOptions.setGDPRConsentString("1")
+            appOptions.setGDPRRequired(True)
 
             from kivmob import KivMob
 
@@ -99,7 +97,7 @@ class MainApp(MDApp):
             # AMAZON ADS
             AdRegistration = autoclass("com.amazon.device.ads.AdRegistration")
             AdRegistration.enableLogging(True)
-            AdRegistration.enableTesting(True)
+            # AdRegistration.enableTesting(True)
             AdRegistration.setAppKey("1d71349359254e938b7d7c34f41a0395")
 
             interstitialAd = autoclass("com.amazon.device.ads.InterstitialAd")
@@ -126,6 +124,15 @@ class MainApp(MDApp):
         self.client = OSCClient('0.0.0.0', 3000)
 
         # SEARCH FOR SONGS FROM THE GIVEN PATHS
+        self.config.add_callback(self.fetch_songs_from_local, 'search-paths', 'folders')
+        self.fetch_songs_from_local()
+
+
+        self.sm = ScreenManager()
+        self.sm.add_widget(MainScreen(name='main_screen'))
+        return self.sm
+
+    def fetch_songs_from_local(self, *args):
         config = self.config
         folders = str(config.get('search-paths', 'folders')).split(',')
         id = 0
@@ -139,10 +146,6 @@ class MainApp(MDApp):
                         'artwork': self.extract_song_artwork(file, id)
                     }
                     id += 1
-
-        self.sm = ScreenManager()
-        self.sm.add_widget(MainScreen(name='main_screen'))
-        return self.sm
 
     def send_all_songs(self, *args):
         all_songs_new = self.all_songs
