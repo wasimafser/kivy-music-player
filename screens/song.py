@@ -142,7 +142,7 @@ class SongScreen(Screen):
             Rectangle(size=bg.size, pos=bg.pos)
 
     def on_songs_counter(self, instance, value, *args):
-        if value % 3 == 0:
+        if value % 3 == 0 and platform == 'android':
             if not self.AMAZON_LOADED_PREVIOUSLY:
                 self.app.InterstitialAd.loadAd()
             elif not self.ADMOB_LOADED_PREVIOUSLY:
@@ -161,7 +161,7 @@ class SongScreen(Screen):
 
     def play_song(self, *args):
         # SHOW AD ON PAUSE AND IF NUMBER OF SONGS PLAYED IS MULTIPLE Of 3
-        if self.songs_counter % 3 == 0:
+        if self.songs_counter % 3 == 0 and platform == 'android':
             # LOAD THE ADD WHICH IS AVAILABLE AND THE OTHER LATER
             if self.app.InterstitialAd.isReady() and not self.AMAZON_LOADED_PREVIOUSLY:
                 self.app.InterstitialAd.showAd()

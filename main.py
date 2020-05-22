@@ -130,7 +130,7 @@ class MainApp(MDApp):
         folders = str(config.get('search-paths', 'folders')).split(',')
         id = 0
         for folder in folders:
-            for format in ["mp3", "aac", "3gp", "flac", "mkv", "wav", "ogg"]:
+            for format in ["mp3", "aac", "3gp", "flac", "mkv", "wav", "ogg", "m4a"]:
                 for file in glob.glob(f"{folder}/*.{format}"):
                     self.all_songs[id] = {
                         'id': id,
