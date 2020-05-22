@@ -15,7 +15,6 @@ from plyer import storagepath
 if platform == 'android':
     from jnius import autoclass, cast
 
-import glob
 import pathlib
 import datetime
 import mutagen
@@ -83,6 +82,7 @@ class MainApp(MDApp):
             appOptions = AdColonyMediationAdapter.getAppOptions()
             appOptions.setGDPRConsentString("1")
             appOptions.setGDPRRequired(True)
+            print(appOptions.getGDPRRequired())
 
             from kivmob import KivMob
 
@@ -135,10 +135,12 @@ class MainApp(MDApp):
     def fetch_songs_from_local(self, *args):
         config = self.config
         folders = str(config.get('search-paths', 'folders')).split(',')
+        if '/' in folders:
+            folders.remove('/')
         id = 0
         for folder in folders:
             for format in ["mp3", "aac", "3gp", "flac", "mkv", "wav", "ogg", "m4a"]:
-                for file in glob.glob(f"{folder}/*.{format}"):
+                for file in pathlib.Path(folder).rglob(f'*.{format}'):
                     self.all_songs[id] = {
                         'id': id,
                         'path': file,
