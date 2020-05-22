@@ -7,7 +7,7 @@ AudioManager = autoclass("android.media.AudioManager")
 class SoundAndroidPlayer(Sound):
     @staticmethod
     def extensions():
-        return ("mp3", "mp4", "aac", "3gp", "flac", "mkv", "wav", "ogg")
+        return ("mp3", "m4a", "mp4", "aac", "3gp", "flac", "mkv", "wav", "ogg")
 
     def __init__(self, **kwargs):
         self._mediaplayer = None
@@ -31,6 +31,7 @@ class SoundAndroidPlayer(Sound):
             Clock.schedule_once(self._do_eos, 0)
 
     def load(self):
+        print("ANDROID MEIDA PLAYER LOADING")
         self.unload()
         self._mediaplayer = MediaPlayer()
         self._mediaplayer.setAudioStreamType(AudioManager.STREAM_MUSIC);

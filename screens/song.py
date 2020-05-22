@@ -240,12 +240,18 @@ class SongScreen(Screen):
             self.loop_status = 1
             self.song.loop = True
             if platform == 'android':
-                self.song.toggle_loop(True)
+                try:
+                    self.song.toggle_loop(True)
+                except Exception as e:
+                    print(e)
         else:
             self.loop_status = 0
             self.song.loop = False
             if platform == 'android':
-                self.song.toggle_loop(False)
+                try:
+                    self.song.toggle_loop(False)
+                except Exception as e:
+                    print(e)
 
     def toggle_shuffle(self, *args):
         if self.shuffle_status:
