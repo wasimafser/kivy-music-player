@@ -141,8 +141,9 @@ class MainApp(MDApp):
         for folder in folders:
             for format in ["mp3", "aac", "3gp", "flac", "mkv", "wav", "ogg", "m4a"]:
                 for file in pathlib.Path(folder).rglob(f'*.{format}'):
+                    file = str(file)
                     if platform == 'win':
-                        file = str(file).replace('/', '\\')
+                        file = file.replace('/', '\\')
                     self.all_songs[id] = {
                         'id': id,
                         'path': file,
@@ -155,6 +156,8 @@ class MainApp(MDApp):
         all_songs_new = self.all_songs
         for id in all_songs_new.keys():
             if 'artwork' in all_songs_new[id]: del all_songs_new[id]['artwork']
+
+        print(all_songs_new)
 
         self.remote_client.send_message(b'/set_remote_songs', [json.dumps(all_songs_new).encode('utf8'), ])
 
