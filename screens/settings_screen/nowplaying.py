@@ -50,5 +50,6 @@ class SettingsNowPlayingScreen(Screen):
                     TwoLineListItem(text="Default", secondary_text="the default theme background", on_touch_down=partial(self.set_now_playing_background, 'default')),
                     TwoLineListItem(text="Artwork Color", secondary_text="the dominant color from artwork", on_touch_down=partial(self.set_now_playing_background, 'artwork-color')),
                 ],
+                auto_dismiss= False
             )
         self.dialog.open()
