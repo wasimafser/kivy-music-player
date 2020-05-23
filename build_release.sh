@@ -1,0 +1,4 @@
+export P4A_RELEASE_KEYSTORE=~/keystores/matrix-music-player.keystore
+export P4A_RELEASE_KEYSTORE_PASSWD=wasim0206
+export P4A_RELEASE_KEYALIAS_PASSWD=wasim0206
+export P4A_RELEASE_KEYALIAS=matrix
