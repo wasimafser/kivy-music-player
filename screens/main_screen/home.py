@@ -15,7 +15,7 @@ Builder.load_string('''
         MDLabel:
             text: "WILL BE POPULATED SOON"
             theme_text_color: "Hint"
-            font_style: "Button"
+            font_style: "OpenSans"
             halign: 'center'
             position: {'center_x': 0.5, 'center_y': '0.5'}
 

@@ -2,6 +2,7 @@ import os
 os.environ['KIVY_AUDIO'] = "ffpyplayer"
 
 from kivymd.app import MDApp
+from kivy.core.text import LabelBase
 
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.properties import ListProperty, DictProperty, NumericProperty, StringProperty, BooleanProperty, ObjectProperty, OptionProperty
@@ -27,8 +28,6 @@ from functools import partial
 from oscpy.client import OSCClient
 from oscpy.server import OSCThreadServer
 
-from screens.main import MainScreen
-
 SERVICE_NAME = u'matrix.music_player.ServiceMatrix'
 
 def print_api(message, *args):
@@ -53,6 +52,9 @@ class MainApp(MDApp):
             elif song_path.suffix == '.m4a':
                 artwork_data = song_file.tags['covr'][0]
                 artwork = CoreImage(io.BytesIO(artwork_data), ext='png', filename=f"{song_id}.png", mipmap=True).texture
+            else:
+                artwork_data = io.BytesIO(open('artwork/default.jpg', 'rb').read())
+                artwork = CoreImage(artwork_data, ext='png', mipmap=True).texture
         except Exception as e:
             # print("has error", e)
             artwork_data = io.BytesIO(open('artwork/default.jpg', 'rb').read())
@@ -127,11 +129,14 @@ class MainApp(MDApp):
 
         self.client = OSCClient('0.0.0.0', 3000)
 
+        # SET FONTS
+        self.set_fonts()
+
         # SEARCH FOR SONGS FROM THE GIVEN PATHS
         self.config.add_callback(self.fetch_songs_from_local, 'search-paths', 'folders')
         self.fetch_songs_from_local()
 
-
+        from screens.main import MainScreen
         self.sm = ScreenManager()
         self.sm.add_widget(MainScreen(name='main_screen'))
         return self.sm
@@ -146,26 +151,26 @@ class MainApp(MDApp):
             for format in ["mp3", "aac", "3gp", "flac", "mkv", "wav", "ogg", "m4a"]:
                 for file in pathlib.Path(folder).rglob(f'*.{format}'):
                     path = str(file)
-                    audio_file = mutagen.File(file, easy=True)
+                    audio_file = mutagen.File(file)
+
                     name = None
                     album = None
                     artist = None
                     album_artist = None
                     genre = None
-                    try:
-                        if file.suffix == '.mp3':
-                            name = audio_file['title'][0]
-                            album = audio_file['album'][0]
-                        elif file.suffix == '.m4a':
-                            name = audio_file['title'][0]
-                            album = audio_file['album'][0]
-                            artist = audio_file['artist'][0]
-                            album_artist = audio_file['album_artist'][0]
-                            genre = audio_file['genre']
-                    except Exception as e:
-                        pass
+                    if file.suffix == '.mp3':
+                        name = audio_file.tags.get('TIT2', ['None'])[0]
+                        album = audio_file.tags.get('TALB', ['None'])[0]
+                        genre = audio_file.tags.get('TCON', ['None'])[0]
+                    elif file.suffix == '.m4a':
+                        name = audio_file.tags.get('\xa9nam', ['None'])[0]
+                        album = audio_file.tags.get('\xa9alb', ['None'])[0]
+                        artist = audio_file.tags.get('\xa9ART', ['None'])[0]
+                        album_artist = audio_file.tags.get('aART', ['None'])[0]
+                        genre = audio_file.tags.get('\xa9gen', ['None'])[0]
                     if platform == 'win':
                         path = path.replace('/', '\\')
+
                     self.all_songs[id] = {
                         'id': id,
                         'album': album if album else 'none',
@@ -177,6 +182,23 @@ class MainApp(MDApp):
                         'length': audio_file.info.length
                     }
                     id += 1
+
+    def set_fonts(self, *args):
+        from kivymd.font_definitions import theme_font_styles
+        LabelBase.register(
+            name="OpenSans",
+            fn_regular="assets/fonts/OpenSans-Regular.ttf",
+            fn_italic="assets/fonts/OpenSans-Italic.ttf",
+            fn_bold="assets/fonts/OpenSans-Bold.ttf",
+            fn_bolditalic="assets/fonts/OpenSans-BoldItalic.ttf")
+
+        theme_font_styles.append('OpenSans')
+        self.theme_cls.font_styles['OpenSans'] = [
+            "OpenSans",
+            16,
+            False,
+            0.15,
+        ]
 
     def send_all_songs(self, *args):
         all_songs_new = self.all_songs
