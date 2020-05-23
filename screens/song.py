@@ -185,7 +185,7 @@ class SongScreen(Screen):
         if self.app.config.get('now-playing', 'background') == 'artwork-color':
             Clock.schedule_once(self.compute_average_image_color, 0.5)
         if self.song is not None:
-            if platform == 'macosx':
+            if platform == 'macosx' or platform == 'win':
                 self.song.stop()
             else:
                 self.song.stop()

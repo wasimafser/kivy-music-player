@@ -141,6 +141,8 @@ class MainApp(MDApp):
         for folder in folders:
             for format in ["mp3", "aac", "3gp", "flac", "mkv", "wav", "ogg", "m4a"]:
                 for file in pathlib.Path(folder).rglob(f'*.{format}'):
+                    if platform == 'win':
+                        file = str(file).replace('/', '\\')
                     self.all_songs[id] = {
                         'id': id,
                         'path': file,
@@ -161,6 +163,7 @@ class MainApp(MDApp):
 
     def set_remote_songs(self, message, *args):
         remote_songs = message.decode('utf8')
+        print(remote_songs)
         self.remote_songs = json.loads(remote_songs)
 
     def send_song(self, message, *args):
@@ -196,6 +199,8 @@ class MainApp(MDApp):
         s.listen(5)
         client_socket, address = s.accept()
 
+        pathlib.Path('remote_temp').mkdir(exist_ok=True)
+
         with open(f"remote_temp/{song_name}.mp3", "wb") as f:
             packet = client_socket.recv(buffer_size)
             while len(packet) != 0:
@@ -225,6 +230,7 @@ class MainApp(MDApp):
         if self.sm.has_screen(screen_name):
             self.sm.current = screen_name
         else:
+            from screens.song import SongScreen
             self.sm.add_widget(SongScreen())
             self.sm.current = screen_name
 

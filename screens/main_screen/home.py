@@ -34,7 +34,10 @@ class HomeScreen(MDBottomNavigationItem):
         self.app = MDApp.get_running_app()
         if platform == 'android':
             request_permissions([Permission.READ_EXTERNAL_STORAGE, Permission.WRITE_EXTERNAL_STORAGE])
-        self.app.client.send_message(b'/print_api', ['in home_screen'.encode('utf8'), ])
+        try:
+            self.app.client.send_message(b'/print_api', ['in home_screen'.encode('utf8'), ])
+        except Exception as e:
+            print(e)
 
     def _load_ad(self, source, *args):
         if source == 'admob':
