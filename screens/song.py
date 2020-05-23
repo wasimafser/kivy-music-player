@@ -6,6 +6,7 @@ from kivy.properties import NumericProperty, BooleanProperty, StringProperty
 from kivy.utils import platform
 from kivy.core.audio import Sound, SoundLoader
 from kivy.clock import Clock
+from kivy.graphics import Color, Rectangle
 
 import datetime
 
