@@ -1,6 +1,7 @@
 from kivymd.app import MDApp
 from kivymd.uix.bottomnavigation import MDBottomNavigationItem
-from kivymd.uix.list import OneLineAvatarListItem
+from kivymd.uix.list import TwoLineAvatarListItem, ILeftBody
+from kivymd.utils.fitimage import FitImage
 
 from kivy.properties import NumericProperty
 from kivy.clock import Clock
@@ -9,11 +10,8 @@ from kivy.lang.builder import Builder
 
 Builder.load_string('''
 <SongItem>:
-    ImageLeftWidget:
+    AlbumArtLeftWidget:
         id: artwork_thumb
-        allow_stretch: True
-        keep_ratio: False
-        size_hint: 1, 1
 
 <SongListScreen>:
     BoxLayout:
@@ -24,8 +22,10 @@ Builder.load_string('''
                 id: songs_list
 ''')
 
+class AlbumArtLeftWidget(ILeftBody, FitImage):
+    pass
 
-class SongItem(OneLineAvatarListItem):
+class SongItem(TwoLineAvatarListItem):
     song_id = NumericProperty()
     artwork = None
     pass
@@ -43,6 +43,7 @@ class SongListScreen(MDBottomNavigationItem):
             song = self.all_songs[id]
             item = SongItem(
                 text= song['name'],
+                secondary_text=song['artist'],
                 on_release= self.play_song,
             )
             item.song_id = id

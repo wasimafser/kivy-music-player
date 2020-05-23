@@ -45,10 +45,14 @@ class MainApp(MDApp):
     remote_client = None
 
     def extract_song_artwork(self, song_path, song_id, *args):
+        song_file = mutagen.File(song_path)
         try:
-            song_file = mutagen.File(song_path)
-            artwork_data = song_file.tags['APIC:'].data
-            artwork = CoreImage(io.BytesIO(artwork_data), ext='png', filename=f"{song_id}.png", mipmap=True).texture
+            if song_path.suffix == '.mp3':
+                artwork_data = song_file.tags['APIC:'].data
+                artwork = CoreImage(io.BytesIO(artwork_data), ext='png', filename=f"{song_id}.png", mipmap=True).texture
+            elif song_path.suffix == '.m4a':
+                artwork_data = song_file.tags['covr'][0]
+                artwork = CoreImage(io.BytesIO(artwork_data), ext='png', filename=f"{song_id}.png", mipmap=True).texture
         except Exception as e:
             # print("has error", e)
             artwork_data = io.BytesIO(open('artwork/default.jpg', 'rb').read())
@@ -141,14 +145,36 @@ class MainApp(MDApp):
         for folder in folders:
             for format in ["mp3", "aac", "3gp", "flac", "mkv", "wav", "ogg", "m4a"]:
                 for file in pathlib.Path(folder).rglob(f'*.{format}'):
-                    file = str(file)
+                    path = str(file)
+                    audio_file = mutagen.File(file, easy=True)
+                    name = None
+                    album = None
+                    artist = None
+                    album_artist = None
+                    genre = None
+                    try:
+                        if file.suffix == '.mp3':
+                            name = audio_file['title'][0]
+                            album = audio_file['album'][0]
+                        elif file.suffix == '.m4a':
+                            name = audio_file['title'][0]
+                            album = audio_file['album'][0]
+                            artist = audio_file['artist'][0]
+                            album_artist = audio_file['album_artist'][0]
+                            genre = audio_file['genre']
+                    except Exception as e:
+                        pass
                     if platform == 'win':
-                        file = file.replace('/', '\\')
+                        path = path.replace('/', '\\')
                     self.all_songs[id] = {
                         'id': id,
-                        'path': file,
-                        'name': pathlib.Path(file).stem,
-                        'artwork': self.extract_song_artwork(file, id)
+                        'album': album if album else 'none',
+                        'artist': artist if artist else 'none',
+                        'path': path,
+                        'name': name if name else file.stem,
+                        'extension': file.suffix,
+                        'artwork': self.extract_song_artwork(file, id),
+                        'length': audio_file.info.length
                     }
                     id += 1
 
