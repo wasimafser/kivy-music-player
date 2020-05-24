@@ -16,6 +16,7 @@ Builder.load_string('''
         MDToolbar:
             id: main_toolbar
             title: "Matrix Music Player"
+            font_style: 'OpenSans'
             # right_action_items: [["settings", lambda x: root.go_to_settings()]]
 
             MDIconButton:
