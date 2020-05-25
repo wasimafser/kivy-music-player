@@ -142,6 +142,8 @@ class MainApp(MDApp):
         return self.sm
 
     def fetch_songs_from_local(self, *args):
+        from libs.media.mediafile import MediaFile
+
         config = self.config
         folders = str(config.get('search-paths', 'folders')).split(',')
         if '/' in folders:
@@ -151,35 +153,20 @@ class MainApp(MDApp):
             for format in ["mp3", "aac", "3gp", "flac", "mkv", "wav", "ogg", "m4a"]:
                 for file in pathlib.Path(folder).rglob(f'*.{format}'):
                     path = str(file)
-                    audio_file = mutagen.File(file)
+                    audio_file = MediaFile(file)
 
-                    name = None
-                    album = None
-                    artist = None
-                    album_artist = None
-                    genre = None
-                    if file.suffix == '.mp3':
-                        name = audio_file.tags.get('TIT2', ['None'])[0]
-                        album = audio_file.tags.get('TALB', ['None'])[0]
-                        genre = audio_file.tags.get('TCON', ['None'])[0]
-                    elif file.suffix == '.m4a':
-                        name = audio_file.tags.get('\xa9nam', ['None'])[0]
-                        album = audio_file.tags.get('\xa9alb', ['None'])[0]
-                        artist = audio_file.tags.get('\xa9ART', ['None'])[0]
-                        album_artist = audio_file.tags.get('aART', ['None'])[0]
-                        genre = audio_file.tags.get('\xa9gen', ['None'])[0]
                     if platform == 'win':
                         path = path.replace('/', '\\')
 
                     self.all_songs[id] = {
                         'id': id,
-                        'album': album if album else 'none',
-                        'artist': artist if artist else 'none',
+                        'album': audio_file.tags['album'],
+                        'artist': audio_file.tags['artist'],
                         'path': path,
-                        'name': name if name else file.stem,
+                        'name': audio_file.tags['name'] if audio_file.tags['name'] else file.stem,
                         'extension': file.suffix,
                         'artwork': self.extract_song_artwork(file, id),
-                        'length': audio_file.info.length
+                        'length': audio_file.info['length']
                     }
                     id += 1
 
