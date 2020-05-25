@@ -14,7 +14,7 @@ class MediaFile(object):
         }
 
         self.info = {
-            'length': 'None'
+            'length': 0
         }
 
         try:
