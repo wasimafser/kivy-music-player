@@ -2,8 +2,9 @@ import os
 os.environ['KIVY_AUDIO'] = "ffpyplayer"
 
 from kivymd.app import MDApp
-from kivy.core.text import LabelBase
+from kivymd.uix.card import MDCard
 
+from kivy.core.text import LabelBase
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.properties import ListProperty, DictProperty, NumericProperty, StringProperty, BooleanProperty, ObjectProperty, OptionProperty
 from kivy.clock import Clock
@@ -11,6 +12,7 @@ from kivy.core.image import Image as CoreImage
 from kivy.uix.image import Image
 from kivy.core.window import Window
 from kivy.utils import platform
+from kivy.metrics import dp
 
 from plyer import storagepath
 if platform == 'android':
@@ -44,8 +46,8 @@ class MainApp(MDApp):
     remote_client = None
 
     def extract_song_artwork(self, song_path, song_id, *args):
-        song_file = mutagen.File(song_path)
         try:
+            song_file = mutagen.File(song_path)
             if song_path.suffix == '.mp3':
                 artwork_data = song_file.tags['APIC:'].data
                 artwork = CoreImage(io.BytesIO(artwork_data), ext='png', filename=f"{song_id}.png", mipmap=True).texture
@@ -131,6 +133,7 @@ class MainApp(MDApp):
 
         # SET FONTS
         self.set_fonts()
+        # self.add_main_widgets()
 
         # SEARCH FOR SONGS FROM THE GIVEN PATHS
         self.config.add_callback(self.fetch_songs_from_local, 'search-paths', 'folders')
@@ -140,6 +143,34 @@ class MainApp(MDApp):
         self.sm = ScreenManager()
         self.sm.add_widget(MainScreen(name='main_screen'))
         return self.sm
+
+    def add_main_widgets(self, *args):
+        print(self.root.ids)
+        if platform not in ['android', 'ios']:
+            '''
+            IN DESKTOPS, set the navigation drawer in a fixed position hence :
+            * remove menu_btn
+            * remove nav_items and app_logo from nav_drawer and add it to main_layout
+            '''
+            self.root.ids.top_bar_box.remove_widget(self.root.ids.menu_btn)
+
+            nav_card = MDCard(orientation='vertical',
+                            size_hint= (0.2, 0.99),
+                            border_radius=dp(50),
+                            pos_hint={'x': 0.005, 'center_y': 0.5})
+            self.root.ids.main_layout.add_widget(nav_card)
+
+            _nav_items = self.root.ids.nav_items
+            _app_logo = self.root.ids.app_logo
+            self.root.ids.nav_drawer.remove_widget(_nav_items)
+            self.root.ids.nav_drawer.remove_widget(_app_logo)
+            # self.root.ids.main_layout.add_widget(_nav_items)
+            # self.root.ids.main_layout.add_widget(_app_logo)
+            nav_card.add_widget(_app_logo)
+            nav_card.add_widget(_nav_items)
+
+            self.root.ids.nav_layout.size_hint_x = 0.8
+            # _nav_items.size_hint_x = 0.25
 
     def fetch_songs_from_local(self, *args):
         from libs.media.mediafile import MediaFile
@@ -163,7 +194,7 @@ class MainApp(MDApp):
                         'album': audio_file.tags['album'],
                         'artist': audio_file.tags['artist'],
                         'path': path,
-                        'name': audio_file.tags['name'] if audio_file.tags['name'] else file.stem,
+                        'name': audio_file.tags['name'] if audio_file.tags['name'] != 'None' else file.stem,
                         'extension': file.suffix,
                         'artwork': self.extract_song_artwork(file, id),
                         'length': audio_file.info['length']
@@ -343,4 +374,6 @@ class MainApp(MDApp):
 
 
 if __name__ == '__main__':
+    if platform not in ['android', 'ios']:
+        Window.maximize()
     MainApp().run()

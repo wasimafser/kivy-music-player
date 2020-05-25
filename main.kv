@@ -1,1 +1,38 @@
 
+
+            # MDFloatingActionButton:
+            #     id: menu_btn
+            #     icon: "menu"
+            #     md_bg_color: app.theme_cls.primary_color
+            #     pos_hint: {'x': 0.05, 'top': 0.95}
+            #     on_release:
+            #         self.opacity = 0
+            #         nav_drawer.set_state('toggle')
+
+            # OTHER IDEAS FOR OPENING NAVIGATION DRAWER
+            # MDCard:
+            #     id: hover_card
+            #     size_hint: 0.9, 0.1
+            #     pos_hint: {'center_x': 0.5, 'top': 0.99}
+            #     on_touch_up:
+            #         self.opacity = 0
+            #
+            #     MDBoxLayout:
+            #         orientation: 'horizontal'
+            #
+            #         MDIconButton:
+            #             id: menu_btn
+            #             icon: 'menu'
+            #             on_release: nav_drawer.toggle_nav_drawer()
+
+            # MDToolbar:
+            #     id: main_toolbar
+            #     title: "Matrix Music Player"
+            #     font_style: 'OpenSans'
+            #     # right_action_items: [["settings", lambda x: root.go_to_settings()]]
+            #     pos_hint: {'x': 0, 'top': 1}
+            #
+            #     MDIconButton:
+            #         id: settings_btn
+            #         icon: 'settings'
+            #         on_release: root.go_to_settings()

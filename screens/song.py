@@ -22,7 +22,7 @@ Builder.load_string('''
             size_hint_y: 0.05
 
         MDCard:
-            size_hint: 0.95, 0.5
+            size_hint: 0.5, 0.5
             pos_hint: {"center_x": .5, "center_y": .5}
             # canvas:
             #     Color:

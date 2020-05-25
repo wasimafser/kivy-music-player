@@ -10,35 +10,107 @@ Builder.load_string('''
 
 <MainScreen>:
     id: main_screen
-    BoxLayout:
-        orientation: "vertical"
+    FloatLayout:
+        id: main_layout
 
-        MDToolbar:
-            id: main_toolbar
-            title: "Matrix Music Player"
-            font_style: 'OpenSans'
-            # right_action_items: [["settings", lambda x: root.go_to_settings()]]
+        BoxLayout:
+            id: top_bar
+            size_hint: 0.9, 0.05
+            pos_hint: {'center_x': 0.5, 'top': 1}
 
-            MDIconButton:
-                id: settings_btn
-                icon: 'settings'
-                on_release: root.go_to_settings()
+            # StackLayout:
+            BoxLayout:
+                id: top_bar_box
+                # orientation: 'lr-tb'
+                orientation: 'horizontal'
 
-        MDBottomNavigation:
+                MDIconButton:
+                    id: menu_btn
+                    icon: 'menu'
+                    on_release: nav_drawer.toggle_nav_drawer()
 
-            HomeScreen:
-                name: "home_screen"
-                text: 'Home'
-                icon: 'home'
+                TextInput:
+                    multiline: False
+                    padding: [0, (self.height-self.line_height)/2]
+                    background_normal: 'assets/transparent.png'
+                    background_active: 'assets/transparent.png'
+                    hint_text: 'Search'
 
-            SongListScreen:
-                name: "song_list_screen"
-                text: 'Songs'
-                icon: 'music'
+                MDIconButton:
+                    id: settings_btn
+                    icon: 'settings'
+                    pos_hint: {'right': 1}
+                    on_release: root.go_to_settings()
 
-            SPlayScreen:
-                name: "splay_screen"
-                text: 'SPLAY'
+        NavigationLayout:
+            id: nav_layout
+            pos_hint: {'right': 1}
+            # canvas.before:
+            #     Color:
+            #         rgba: (1, 0, 0, 1)
+            #     Rectangle:
+            #         size: self.size
+            #         pos: self.pos
+
+            ScreenManager:
+                size_hint_y: 0.95
+                id: sm
+                pos_hint: {'right': 1}
+
+                HomeScreen:
+                    name: "home_screen"
+
+                SongListScreen:
+                    name: "song_list_screen"
+
+
+
+            MDNavigationDrawer:
+                id: nav_drawer
+                orientation: 'vertical'
+                on_state:
+                    # menu_btn.opacity = 1 if self.state == 'close' else 0
+                    menu_btn.opacity = 1 if self.state == 'close' else 0
+
+                BoxLayout:
+                    id: app_logo
+                    orientation: 'horizontal'
+                    size_hint_y: None
+                    height: avatar.height
+
+                    Image:
+                        id: avatar
+                        size_hint: None, None
+                        size: "56dp", "56dp"
+                        source: "assets/icon.png"
+
+                    MDLabel:
+                        text: 'MATRIX MUSIC PLAYER'
+                        font_style: 'OpenSans'
+                        halign: 'center'
+                        valign: 'center'
+
+                ScrollView:
+                    id: nav_items
+                    MDList:
+                        OneLineListItem:
+                            text: 'YOUR LIBRARY'
+                            font_style: 'OpenSans'
+                        OneLineIconListItem:
+                            text: 'Home'
+                            divider: None
+                            on_release: sm.current = 'home_screen'
+
+                            IconLeftWidget:
+                                icon: 'home'
+
+                        OneLineIconListItem:
+                            text: 'Songs'
+                            divider: None
+                            on_release: sm.current = 'song_list_screen'
+
+                            IconLeftWidget:
+                                icon: 'music'
 ''')
 
 
