@@ -5,8 +5,6 @@ class MediaFile(object):
 
     def __init__(self, path):
         # super(MediaFile, self).__init__(path)
-        audio_file = mutagen.File(path)
-
         self.tags = {
             'name': 'None',
             'album': 'None',
@@ -18,6 +16,12 @@ class MediaFile(object):
         self.info = {
             'length': 'None'
         }
+
+        try:
+            audio_file = mutagen.File(path)
+        except Exception as e:
+            print(e)
+            return
 
         self.read_tags(path, audio_file)
         self.read_info(path, audio_file)
