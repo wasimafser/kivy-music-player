@@ -30,6 +30,8 @@ from functools import partial
 from oscpy.client import OSCClient
 from oscpy.server import OSCThreadServer
 
+from libs.database import db_main, get
+
 SERVICE_NAME = u'matrix.music_player.ServiceMatrix'
 
 def print_api(message, *args):
@@ -37,6 +39,7 @@ def print_api(message, *args):
 
 class MainApp(MDApp):
     all_songs = DictProperty()
+    # all_songs = ListProperty()
     now_playing = DictProperty()
 
     now_playing_background = OptionProperty('default', options=['default', 'artwork-color'])
@@ -137,7 +140,8 @@ class MainApp(MDApp):
 
         # SEARCH FOR SONGS FROM THE GIVEN PATHS
         self.config.add_callback(self.fetch_songs_from_local, 'search-paths', 'folders')
-        self.fetch_songs_from_local()
+        #self.fetch_songs_from_local()
+        Clock.schedule_once(lambda x: db_main.initialize(self.config))
 
         from screens.main import MainScreen
         self.sm = ScreenManager()
@@ -334,6 +338,7 @@ class MainApp(MDApp):
             return True
 
     def on_start(self):
+        self.all_songs = get.all_songs()
         # ADS
         # if platform == 'android':
         #     self.ads.show_interstitial()
