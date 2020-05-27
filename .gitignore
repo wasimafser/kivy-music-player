@@ -134,3 +134,5 @@ test.py
 bin/
 venvwin/
 .idea/
+*.db
+*.apk
