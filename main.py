@@ -38,8 +38,8 @@ def print_api(message, *args):
     print("Message from service : ", message)
 
 class MainApp(MDApp):
-    all_songs = DictProperty()
-    # all_songs = ListProperty()
+    # all_songs = DictProperty()
+    all_songs = ListProperty()
     now_playing = DictProperty()
 
     now_playing_background = OptionProperty('default', options=['default', 'artwork-color'])
@@ -139,14 +139,19 @@ class MainApp(MDApp):
         # self.add_main_widgets()
 
         # SEARCH FOR SONGS FROM THE GIVEN PATHS
-        self.config.add_callback(self.fetch_songs_from_local, 'search-paths', 'folders')
+        # self.config.add_callback(self.fetch_songs_from_local, 'search-paths', 'folders')
         #self.fetch_songs_from_local()
-        Clock.schedule_once(lambda x: db_main.initialize(self.config))
+        # Clock.schedule_once(lambda x: db_main.initialize(self.config))
+        Clock.schedule_once(self.initialize_db)
 
         from screens.main import MainScreen
         self.sm = ScreenManager()
         self.sm.add_widget(MainScreen(name='main_screen'))
         return self.sm
+
+    def initialize_db(self, *args):
+        db_main.initialize(self.config)
+        self.all_songs = get.all_songs()
 
     def add_main_widgets(self, *args):
         print(self.root.ids)
@@ -338,7 +343,6 @@ class MainApp(MDApp):
             return True
 
     def on_start(self):
-        self.all_songs = get.all_songs()
         # ADS
         # if platform == 'android':
         #     self.ads.show_interstitial()
@@ -381,4 +385,5 @@ class MainApp(MDApp):
 if __name__ == '__main__':
     if platform not in ['android', 'ios']:
         Window.maximize()
-    MainApp().run()
+    app = MainApp()
+    app.run()

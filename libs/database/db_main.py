@@ -61,7 +61,7 @@ def initialize(config):
     with con:
         cursor = con.execute("SELECT path FROM songs")
     paths_list = cursor.fetchall()
-    paths = [path[0] for path in paths_list]
+    paths = [path['path'] for path in paths_list]
 
     from libs.media.mediafile import MediaFile
 

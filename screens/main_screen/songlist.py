@@ -1,43 +1,58 @@
 from kivymd.app import MDApp
-from kivymd.uix.bottomnavigation import MDBottomNavigationItem
 from kivymd.uix.list import TwoLineAvatarIconListItem, ILeftBody, IRightBody, IRightBodyTouch
 from kivymd.utils.fitimage import FitImage
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.button import MDIconButton
 
-from kivy.properties import NumericProperty
+from kivy.uix.screenmanager import Screen
+from kivy.properties import NumericProperty, StringProperty, ObjectProperty
 from kivy.clock import Clock
 from kivy.lang.builder import Builder
 from kivy.core.window import Window
 from kivy.metrics import Metrics
 from kivy.utils import platform
+from kivy.uix.recycleview import RecycleView
 
 import datetime
 
 Builder.load_string('''
-<SongItem>:
+<SongListItem>:
+    text: self.name
+    secondary_text: self.artist
     font_style: 'OpenSans'
     divider: 'Full'
-    on_size:
-        self.ids._right_container.width = right_widgets.width
-        self.ids._right_container.x = right_widgets.width
+    # on_size:
+    #     self.ids._right_container.width = right_widgets.width
+    #     self.ids._right_container.x = right_widgets.width
     AlbumArtLeftWidget:
         id: artwork_thumb
+        texture: root.image
 
     RightWidgets:
         id: right_widgets
         MDLabel:
             id: audio_length
+            text: root.length
             font_style: 'OpenSans'
             theme_text_color: 'Secondary'
 
 <SongListScreen>:
-    BoxLayout:
-        orientation: "vertical"
-
-        ScrollView:
-            MDList:
-                id: songs_list
+    # BoxLayout:
+    #     orientation: "vertical"
+    #
+    #     ScrollView:
+    #         MDList:
+    #             id: songs_list
+    RecycleView:
+        id: song_list_rv
+        viewclass: 'SongListItem'
+        RecycleGridLayout:
+            default_size: None, dp(56)
+            cols: 1
+            default_size_hint: 1, None
+            size_hint_y: None
+            height: self.minimum_height
+            orientation: 'vertical'
 ''')
 
 class RightWidgets(IRightBodyTouch, MDBoxLayout):
@@ -73,11 +88,14 @@ class RightWidgets(IRightBodyTouch, MDBoxLayout):
 class AlbumArtLeftWidget(ILeftBody, FitImage):
     pass
 
-class SongItem(TwoLineAvatarIconListItem):
-    song_id = NumericProperty()
-    artwork = None
+class SongListItem(TwoLineAvatarIconListItem):
+    id = NumericProperty()
+    name = StringProperty()
+    artist = StringProperty()
+    image = ObjectProperty()
+    length = StringProperty()
 
-class SongListScreen(MDBottomNavigationItem):
+class SongListScreen(Screen):
 
     def convert_seconds_to_min(self, sec):
         val = str(datetime.timedelta(seconds = sec)).split(':')
@@ -85,24 +103,11 @@ class SongListScreen(MDBottomNavigationItem):
 
     def __init__(self, *args, **kwargs):
         super(SongListScreen, self).__init__(*args, **kwargs)
-        self.all_songs = MDApp.get_running_app().all_songs
-        # Window.bind(on_resize=self.window_size_changed)
-        # print(Metrics.dpi)
-
-        Clock.schedule_once(self.populate_song_list)
+        self.app = MDApp.get_running_app()
+        self.app.bind(all_songs=self.populate_song_list)
 
     def populate_song_list(self, *args):
-        for id in self.all_songs.keys():
-            song = self.all_songs[id]
-            item = SongItem(
-                text= song['name'],
-                secondary_text=f"[size=12]{song['artist']}[/size]",
-                on_release= self.play_song if platform == 'android' else lambda x: print(''),
-            )
-            item.song_id = id
-            item.ids.artwork_thumb.texture = item.artwork = song['artwork']
-            item.ids.audio_length.text = self.convert_seconds_to_min(song['length'])
-            self.ids.songs_list.add_widget(item)
+        self.ids.song_list_rv.data = self.app.all_songs
 
     def play_song(self, *args):
         app = MDApp.get_running_app()
