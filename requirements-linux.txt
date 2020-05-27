@@ -47,3 +47,4 @@ urllib3==1.25.9
 virtualenv==16.7.10
 wrapt==1.12.1
 zipp==3.1.0
+musicbrainzngs
