@@ -1,6 +1,7 @@
 import pathlib
 import mutagen
 import io
+import datetime
 
 from kivy.core.image import Image as CoreImage
 from kivy.utils import platform
@@ -40,7 +41,7 @@ def extract_song_artwork(song_path, *args):
     try:
         song_file = mutagen.File(song_path)
         if song_path.suffix == '.mp3':
-            artwork_data = song_file.tags['APIC:'].data
+            artwork_data = song_file.tags.getall('APIC')[0].data
             # artwork = CoreImage(io.BytesIO(artwork_data), ext='png', mipmap=True).texture
         elif song_path.suffix == '.m4a':
             artwork_data = song_file.tags['covr'][0]
@@ -50,12 +51,19 @@ def extract_song_artwork(song_path, *args):
             # io.BytesIO()
             # artwork = CoreImage(artwork_data, ext='png', mipmap=True).texture
     except Exception as e:
+        print(e)
         # print("has error", e)
         artwork_data = open('artwork/default.jpg', 'rb').read()
         # artwork_data = io.BytesIO()
         # artwork = CoreImage(artwork_data, ext='png', mipmap=True).texture
 
     return artwork_data
+
+def convert_seconds_to_min(sec):
+    if sec == 0:
+        return '00:00'
+    val = str(datetime.timedelta(seconds = sec)).split(':')
+    return f'{val[1]}:{val[2].split(".")[0]}'
 
 def initialize(config):
     with con:
@@ -89,7 +97,7 @@ def initialize(config):
                     'name': audio_file.tags['name'] if audio_file.tags['name'] != 'None' else file.stem,
                     'extension': file.suffix,
                     'artwork': extract_song_artwork(file),
-                    'length': audio_file.info['length']
+                    'length': convert_seconds_to_min(audio_file.info['length'])
                 }
 
                 try:
