@@ -26,3 +26,23 @@ def all_songs():
         row['image'] = extract_song_artwork(row['image'], row['id'])
 
     return all_data
+
+def song(id):
+    with con:
+        cursor = con.execute('''
+            SELECT
+                s.*,
+                album.name as album,
+                artist.name as artist
+            FROM
+                songs s
+                INNER JOIN album ON s.album = album.id
+                INNER JOIN artist ON album.artist = artist.id
+            WHERE
+                s.id = ?
+        ''', (id, ))
+
+    song_data = cursor.fetchone()
+    song_data['image'] = extract_song_artwork(song_data['image'], song_data['id'])
+
+    return song_data
