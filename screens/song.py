@@ -9,6 +9,7 @@ from kivy.clock import Clock
 from kivy.graphics import Color, Rectangle
 
 import datetime
+import random
 
 Builder.load_string('''
 <SongScreen>:
@@ -225,7 +226,11 @@ class SongScreen(Screen):
     def next_song(self, *args):
         current_song_id = self.app.now_playing['id']
         try:
-            self.app.now_playing = self.app.all_songs[current_song_id+1]
+            if self.shuffle_status:
+                total_songs = len(self.app.all_songs)
+                self.app.now_playing = self.app.all_songs[random.randrange(total_songs)]
+            else:
+                self.app.now_playing = self.app.all_songs[current_song_id+1]
         except KeyError:
             self.app.now_playing = self.app.all_songs[0]
 
