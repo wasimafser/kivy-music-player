@@ -182,7 +182,7 @@ class SongScreen(Screen):
         self.song_path = now_playing['path']
         self.song_name = now_playing['name']
 
-        self.ids.album_art.texture = now_playing['artwork']
+        self.ids.album_art.texture = now_playing['image']
         if self.app.config.get('now-playing', 'background') == 'artwork-color':
             Clock.schedule_once(self.compute_average_image_color, 0.5)
         if self.song is not None:
