@@ -53,14 +53,7 @@ class MediaFile(object):
             self.tags['genre'] = audio_file.tags.get('\xa9gen', [None])[0]
 
         if not self.tags['artist']:
-            # self.musixmatch.track_search(self.tags['name'])
-            resp = musicbrainzngs.search_recordings(query=self.tags['name'], limit=2)
-            # print(resp)
-            # self.tags['artist'] = resp['artist-list'][0]['name']
             self.tags['artist'] = 'Unknown'
-        if not self.tags['album']:
-            resp = musicbrainzngs.search_releases(query=self.tags['name'], limit=2)
-            # print(resp)
 
     def read_info(self, file, audio_file):
         self.info['length'] = audio_file.info.length
