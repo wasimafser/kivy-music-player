@@ -2,9 +2,6 @@ import mutagen
 import pathlib
 
 # from libs.api.musixmatch import MusixMatch
-import musicbrainzngs
-musicbrainzngs.set_useragent('Matrix Music Player', '0.1', 'wasim.afser@gmail.com')
-musicbrainzngs.auth('wasimafser', 'w@sim0206')
 
 class MediaFile(object):
 
@@ -15,7 +12,7 @@ class MediaFile(object):
             'name': None,
             'album': None,
             'artist': None,
-            'other_artists': None,
+            'album_artist': None,
             'genre': None
         }
 
@@ -41,20 +38,16 @@ class MediaFile(object):
     def read_tags(self, file, audio_file):
         if file.suffix == '.mp3':
             self.tags['name'] = audio_file.tags.get('TIT2', [None])[0]
-            self.tags['artist'] = audio_file.tags.get('TPE1', [None])[0]
-            self.tags['other_artists'] = audio_file.tags.get('TPE2', [None])[0]
+            self.tags['artist'] = audio_file.tags.get('TPE1', ['Unknown'])[0]
+            self.tags['album_artist'] = audio_file.tags.get('TPE2', ['Unknown'])[0]
             self.tags['album'] = audio_file.tags.get('TALB', [None])[0]
             self.tags['genre'] = audio_file.tags.get('TCON', [None])[0]
         elif file.suffix == '.m4a':
             self.tags['name'] = audio_file.tags.get('\xa9nam', [None])[0]
             self.tags['album'] = audio_file.tags.get('\xa9alb', [None])[0]
-            self.tags['artist'] = audio_file.tags.get('\xa9ART', [None])[0]
-            self.tags['other_artists'] = audio_file.tags.get('aART', [None])[0]
+            self.tags['artist'] = audio_file.tags.get('\xa9ART', ['Unknown'])[0]
+            self.tags['album_artist'] = audio_file.tags.get('aART', ['Unknown'])[0]
             self.tags['genre'] = audio_file.tags.get('\xa9gen', [None])[0]
-
-        if not self.tags['artist']:
-            print(self.tags['other_artists'])
-            self.tags['artist'] = 'Unknown'
 
     def read_info(self, file, audio_file):
         self.info['length'] = audio_file.info.length

@@ -2,16 +2,20 @@ import pathlib
 import mutagen
 import io
 import datetime
+import re
+import sqlite3
 
 from kivy.core.image import Image as CoreImage
 from kivy.utils import platform
 
 from libs.media.mediafile import MediaFile
-from libs.database import con
+from libs.database import con, added_artists
+from libs.api import spotify
 
 with con:
     con.execute('''CREATE TABLE IF NOT EXISTS artist(
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    spotify_id VARCHAR UNIQUE,
                     name VARCHAR UNIQUE,
                     image BLOB
     );''')
@@ -36,6 +40,29 @@ with con:
                     image BLOB,
                     FOREIGN KEY (album) REFERENCES album (id)
     );''')
+
+with con:
+    con.execute('''
+        CREATE TABLE IF NOT EXISTS artist_type(
+            id integer primary key AUTOINCREMENT,
+            type VARCHAR
+        );
+    ''')
+
+with con:
+    con.executemany('''
+        INSERT INTO artist_type(type) VALUES(?);
+    ''', [('MAIN', ), ('OTHER', ), ])
+
+with con:
+    con.execute('''
+        CREATE TABLE IF NOT EXISTS song_artist(
+            id integer primary key AUTOINCREMENT,
+            song_id INTEGER REFERENCES songs(id),
+            artist_id INTEGER REFERENCES artist(id),
+            artist_type INTEGER REFERENCES artist_type(id)
+        );
+    ''')
 
 def extract_song_artwork(song_path, *args):
     try:
@@ -93,6 +120,7 @@ def initialize(config):
                 info = {
                     'album': audio_file.tags['album'],
                     'artist': audio_file.tags['artist'],
+                    'album_artist': audio_file.tags['album_artist'],
                     'path': path,
                     'name': audio_file.tags['name'] if audio_file.tags['name'] != 'None' else file.stem,
                     'extension': file.suffix,
@@ -101,19 +129,57 @@ def initialize(config):
                 }
 
                 try:
-                    with con:
-                        cursor = con.execute("INSERT INTO artist(name) VALUES(?)", (info['artist'], ))
-                    artist_id = cursor.lastrowid
+                    names_separator = re.findall('[^A-Za-z0-9 ]', info['artist'])
+                    # print(result)
                 except Exception as e:
-                    with con:
-                        cursor = con.execute("SELECT id FROM artist WHERE name = ?", (info['artist'], ))
-                    artist_id = cursor.fetchone()['id']
+                    print(e)
+
+                # IF ALBUM ARTIST AND ARTIST ARE SAME THEN SAVE ONCE
+                values = []
+                main_artist = None
+                if info['album_artist'].lower() == info['artist'].lower():
+                    values.append(info['album_artist'])
+                else:
+                    if info['album_artist'] != 'Unknown':
+                        values.append(info['album_artist'])
+                        main_artist = info['album_artist']
+                    if info['artist'] != 'Unknown':
+                        if names_separator:
+                            values.extend([artist.strip() for artist in info['artist'].split(names_separator[0]) if artist.strip() not in values])
+                        else:
+                            values.append(info['artist'])
+
+                with con:
+                    for artist in values:
+                        if artist not in added_artists:
+                            added_artists.append(artist)
+                            artist_info = {
+                                'spotify_id': None,
+                                'image': None
+                            }
+                            if artist != 'Unknown':
+                                pass
+                                artist_info = spotify.get_artist_info(artist, search=True)
+                            try:
+                                cursor = con.execute('''
+                                    INSERT INTO artist(name, spotify_id, image)
+                                    VALUES(?, ?, ?)
+                                    ''', (artist, artist_info['spotify_id'], artist_info['image'],))
+                            except sqlite3.IntegrityError:
+                                continue
+
+                with con:
+                    if not main_artist:
+                        # GET THE VALUE OF FIRST ARTIST HOPING THAT IT WOULD BE THE MAIN ARTIST
+                        main_artist = values[0]
+                    cursor = con.execute("SELECT id FROM artist WHERE name = ?", (main_artist, ))
+                artist_id = cursor.fetchone()['id']
 
                 try:
                     with con:
                         cursor = con.execute("INSERT INTO album(name, artist) VALUES(?, ?)", (info['album'], artist_id, ))
                     album_id = cursor.lastrowid
-                except Exception as e:
+                except sqlite3.IntegrityError:
                     with con:
                         cursor = con.execute("SELECT id from album WHERE name = ?", (info['album'], ))
                     album_id = cursor.fetchone()['id']

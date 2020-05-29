@@ -9,3 +9,5 @@ def dict_factory(cursor, row):
 con = sqlite3.connect('libs/database/matrix.db')
 # con.row_factory = sqlite3.Row
 con.row_factory = dict_factory
+
+added_artists = []

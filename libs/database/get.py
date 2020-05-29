@@ -23,7 +23,7 @@ def all_songs():
     all_data = cursor.fetchall()
 
     for row in all_data:
-        row['image'] = extract_song_artwork(row['image'], row['id'])
+        row['image'] = extract_song_artwork(row['image'], f"s_{row['id']}")
 
     return all_data
 
@@ -43,6 +43,21 @@ def song(id):
         ''', (id, ))
 
     song_data = cursor.fetchone()
-    song_data['image'] = extract_song_artwork(song_data['image'], song_data['id'])
+    song_data['image'] = extract_song_artwork(song_data['image'], f"s_{song_data['id']}")
 
     return song_data
+
+def all_artists():
+    with con:
+        cursor = con.execute('''
+            SELECT *
+            FROM artist
+            WHERE image NOT NULL
+        ''')
+
+    all_data = cursor.fetchall()
+
+    for row in all_data:
+        row['image'] = extract_song_artwork(row['image'], f"a_{row['id']}")
+
+    return all_data
