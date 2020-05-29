@@ -42,18 +42,24 @@ Builder.load_string('''
 
 <SongCardItem>:
     spacing: dp(5)
+    focus_behaviour: True
+    ripple_behaviour: True
     FitImage:
         texture: root.image
-        size_hint_x: 0.25
+        size_hint_x: None
+        width: self.height
     MDLabel:
         text: root.name
         font_style: 'OpenSans'
+        theme_text_color: 'Primary'
     MDLabel:
         text: root.artist
         font_style: 'OpenSans'
+        theme_text_color: 'Primary'
     MDLabel:
         text: root.length
         font_style: 'OpenSans'
+        theme_text_color: 'Primary'
     MDIconButton:
         icon: 'play'
         on_release: root.toggle_song(root.id)
@@ -127,7 +133,11 @@ class SongCardItem(MDCard):
         self.app = MDApp.get_running_app()
 
     def toggle_song(self, song_id, *args):
-        self.app.now_playing = song(song_id)
+        try:
+            if song_id != self.app.now_playing['id']:
+                self.app.now_playing = song(song_id)
+        except:
+            self.app.now_playing = song(song_id)
 
         sm = self.app.sm
         screen_name = 'song_screen'
