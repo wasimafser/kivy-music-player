@@ -41,8 +41,8 @@ class MediaFile(object):
     def read_tags(self, file, audio_file):
         if file.suffix == '.mp3':
             self.tags['name'] = audio_file.tags.get('TIT2', [None])[0]
-            self.tags['artist'] = audio_file.tags.get('TPE2', [None])[0]
-            self.tags['other_artists'] = audio_file.tags.get('TPE1', [None])[0]
+            self.tags['artist'] = audio_file.tags.get('TPE1', [None])[0]
+            self.tags['other_artists'] = audio_file.tags.get('TPE2', [None])[0]
             self.tags['album'] = audio_file.tags.get('TALB', [None])[0]
             self.tags['genre'] = audio_file.tags.get('TCON', [None])[0]
         elif file.suffix == '.m4a':
@@ -53,6 +53,7 @@ class MediaFile(object):
             self.tags['genre'] = audio_file.tags.get('\xa9gen', [None])[0]
 
         if not self.tags['artist']:
+            print(self.tags['other_artists'])
             self.tags['artist'] = 'Unknown'
 
     def read_info(self, file, audio_file):
