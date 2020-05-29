@@ -2,7 +2,7 @@ from kivymd.app import MDApp
 from kivy.uix.screenmanager import Screen
 
 from kivy.lang.builder import Builder
-from kivy.properties import NumericProperty, BooleanProperty, StringProperty
+from kivy.properties import NumericProperty, BooleanProperty, StringProperty, ObjectProperty
 from kivy.utils import platform
 from kivy.core.audio import Sound, SoundLoader
 from kivy.clock import Clock
@@ -23,7 +23,9 @@ Builder.load_string('''
             size_hint_y: 0.05
 
         MDCard:
-            size_hint: 0.5, 0.5
+            # size_hint: 0.5, 0.5
+            size_hint: None, 0.5
+            width: self.height
             pos_hint: {"center_x": .5, "center_y": .5}
             # canvas:
             #     Color:
@@ -49,6 +51,7 @@ Builder.load_string('''
             MDLabel:
                 text: root.song_name
                 halign: 'center'
+                font_style: 'OpenSans'
                 theme_text_color: 'Primary'
 
             BoxLayout:
@@ -59,6 +62,7 @@ Builder.load_string('''
                     id: song_cur_pos_label
                     size_hint: 0.2, 1
                     halign: "center"
+                    font_style: 'OpenSans'
                     theme_text_color: 'Primary'
                 MDSlider:
                     id: song_slider
@@ -66,11 +70,12 @@ Builder.load_string('''
                     max: root.song_max_length
                     value: root.song_current_pos
                     hint: False
-                    on_touch_up: if self.collide_point(*args[1].pos): root.seek_song()
+                    on_touch_up: if self.collide_point(*args[1].pos): root.seek_song(self.value)
                 MDLabel:
                     id: song_total_length_label
                     size_hint: 0.2, 1
                     halign: "center"
+                    font_style: 'OpenSans'
                     theme_text_color: 'Primary'
 
             BoxLayout:
@@ -86,12 +91,13 @@ Builder.load_string('''
 ''')
 
 class SongScreen(Screen):
+    artist_name = StringProperty()
     loop_status = NumericProperty(0)
     shuffle_status = BooleanProperty(False)
     song_max_length = NumericProperty(0)
     song_current_pos = NumericProperty(0)
     song_path = StringProperty('')
-    song = None
+    song = ObjectProperty()
     mPlayer = None
     song_state = StringProperty('pause')
     song_name = StringProperty('')
@@ -182,6 +188,7 @@ class SongScreen(Screen):
         now_playing = self.app.now_playing
         self.song_path = now_playing['path']
         self.song_name = now_playing['name']
+        self.artist_name = now_playing['artist']
 
         self.ids.album_art.texture = now_playing['image']
         if self.app.config.get('now-playing', 'background') == 'artwork-color':
@@ -211,7 +218,8 @@ class SongScreen(Screen):
         self.ids.song_cur_pos_label.text = self.convert_seconds_to_min(self.song_current_pos)
 
     def seek_song(self, *args):
-        self.song_current_pos = self.ids.song_slider.value
+        # self.song_current_pos = self.ids.song_slider.value
+        self.song_current_pos = args[0]
         self.song.seek(self.song_current_pos)
 
     def toggle_song_play(self, *args):
@@ -231,14 +239,14 @@ class SongScreen(Screen):
                 self.app.now_playing = self.app.all_songs[random.randrange(total_songs)]
             else:
                 self.app.now_playing = self.app.all_songs[current_song_id+1]
-        except KeyError:
+        except IndexError:
             self.app.now_playing = self.app.all_songs[0]
 
     def prev_song(self, *args):
         current_song_id = self.app.now_playing['id']
         try:
             self.app.now_playing = self.app.all_songs[current_song_id-1]
-        except KeyError:
+        except IndexError:
             self.app.now_playing = self.app.all_songs[0]
 
     def toggle_loop(self, *args):
