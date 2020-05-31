@@ -11,6 +11,8 @@ from kivy.graphics import Color, Rectangle
 import datetime
 import random
 
+from libs.database.put import update_times_listened
+
 Builder.load_string('''
 <SongScreen>:
     name: 'song_screen'
@@ -51,8 +53,16 @@ Builder.load_string('''
             MDLabel:
                 text: root.song_name
                 halign: 'center'
+                size_hint_y: None
                 font_style: 'OpenSans'
                 theme_text_color: 'Primary'
+
+            MDLabel:
+                text: root.artist_name
+                halign: 'center'
+                size_hint_y: None
+                font_style: 'OpenSans'
+                theme_text_color: 'Secondary'
 
             BoxLayout:
                 orientation: 'horizontal'
@@ -78,16 +88,15 @@ Builder.load_string('''
                     font_style: 'OpenSans'
                     theme_text_color: 'Primary'
 
-            BoxLayout:
-                MDBottomAppBar:
-                    MDToolbar:
-                        id: song_screen_toolbar
-                        icon: root.song_state
-                        type: 'bottom'
-                        left_action_items: [["repeat-off" if root.loop_status == 0 else "repeat-once", lambda x: root.toggle_loop()], ["skip-previous", lambda x: root.prev_song()]]
-                        right_action_items: [["skip-next", lambda x: root.next_song()], ["shuffle-disabled" if not root.shuffle_status else "shuffle-variant", lambda x: root.toggle_shuffle()]]
-                        on_action_button: root.toggle_song_play()
-                        mode: 'center'
+        MDBottomAppBar:
+            MDToolbar:
+                id: song_screen_toolbar
+                icon: root.song_state
+                type: 'bottom'
+                left_action_items: [["repeat-off" if root.loop_status == 0 else "repeat-once", lambda x: root.toggle_loop()], ["skip-previous", lambda x: root.prev_song()]]
+                right_action_items: [["skip-next", lambda x: root.next_song()], ["shuffle-disabled" if not root.shuffle_status else "shuffle-variant", lambda x: root.toggle_shuffle()]]
+                on_action_button: root.toggle_song_play()
+                mode: 'center'
 ''')
 
 class SongScreen(Screen):
@@ -208,6 +217,7 @@ class SongScreen(Screen):
             self.song_max_length = self.song.length
             self.ids.song_total_length_label.text = self.convert_seconds_to_min(self.song_max_length)
             self.song.play()
+            self._seconds_listened = 0
             self.loop_status = 1
             self.toggle_loop()
             Clock.schedule_interval(self.manage_song, 1)
@@ -215,6 +225,9 @@ class SongScreen(Screen):
     def manage_song(self, *args):
         # print(self.song.get_pos(), self.song.length)
         self.song_current_pos = self.song.get_pos()
+        self._seconds_listened += 1
+        if self._seconds_listened == 30:
+            update_times_listened(self.app.now_playing['id'])
         self.ids.song_cur_pos_label.text = self.convert_seconds_to_min(self.song_current_pos)
 
     def seek_song(self, *args):
