@@ -9,7 +9,7 @@ from kivy.core.image import Image as CoreImage
 from kivy.utils import platform
 
 from libs.media.mediafile import MediaFile
-from libs.database import con, added_artists
+from libs.database import con, added_artists, added_artist_ids
 from libs.api import spotify
 
 with con:
@@ -38,6 +38,7 @@ with con:
                     path varchar,
                     album INTEGER,
                     image BLOB,
+                    times_listened INTEGER DEFAULT 0,
                     FOREIGN KEY (album) REFERENCES album (id)
     );''')
 
@@ -49,7 +50,6 @@ with con:
         );
     ''')
 
-with con:
     con.executemany('''
         INSERT INTO artist_type(type) VALUES(?);
     ''', [('MAIN', ), ('OTHER', ), ])
@@ -165,6 +165,7 @@ def initialize(config):
                                     INSERT INTO artist(name, spotify_id, image)
                                     VALUES(?, ?, ?)
                                     ''', (artist, artist_info['spotify_id'], artist_info['image'],))
+                                added_artist_ids[artist] = cursor.lastrowid
                             except sqlite3.IntegrityError:
                                 continue
 
@@ -186,6 +187,13 @@ def initialize(config):
 
                 try:
                     with con:
-                        con.execute("INSERT INTO songs(name, length, extension, path, album, image) VALUES(?, ?, ?, ?, ?, ?)", (info['name'], info['length'], info['extension'], info['path'], album_id, info['artwork'], ))
-                except:
-                    pass
+                        cursor = con.execute("INSERT INTO songs(name, length, extension, path, album, image) VALUES(?, ?, ?, ?, ?, ?)", (info['name'], info['length'], info['extension'], info['path'], album_id, info['artwork'], ))
+                        song_id = cursor.lastrowid
+
+                        for artist in values:
+                            artist_type = 2
+                            if artist == main_artist:
+                                artist_type = 1
+                            con.execute("INSERT INTO song_artist(song_id, artist_id, artist_type) VALUES(?, ?, ?)", (song_id, added_artist_ids[artist], artist_type))
+                except Exception as e:
+                    print(e)

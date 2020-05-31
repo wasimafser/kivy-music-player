@@ -11,3 +11,4 @@ con = sqlite3.connect('libs/database/matrix.db')
 con.row_factory = dict_factory
 
 added_artists = []
+added_artist_ids = {}
