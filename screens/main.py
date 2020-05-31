@@ -121,6 +121,8 @@ Builder.load_string('''
 <MiniPlayer>:
     size_hint: 0.9, 0.1
     pos_hint: {'center_x': 0.5, 'top': 0.12}
+    on_release:
+        app.sm.current = 'song_screen'
     BoxLayout:
         id: image_box
         size_hint_x: None
