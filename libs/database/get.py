@@ -103,3 +103,35 @@ def all_artists():
         row['image'] = extract_song_artwork(row['image'], f"a_{row['id']}")
 
     return all_data
+
+def artist(artist_id):
+    with con:
+        cursor = con.execute('''
+            SELECT *
+            FROM artist
+            WHERE id = ?
+        ''', (artist_id, ))
+
+    artist_data = cursor.fetchone()
+    artist_data['image'] = extract_song_artwork(artist_data['image'], f"a_{artist_data['id']}")
+
+    return artist_data
+
+def artist_songs(artist_id):
+    with con:
+        cursor = con.execute('''
+            SELECT
+                s.*
+            FROM
+                songs s
+                INNER JOIN song_artist ON song_artist.song_id = s.id
+            WHERE
+                song_artist.artist_id = ? AND song_artist.artist_type = 1
+        ''', (artist_id, ))
+
+    all_data = cursor.fetchall()
+
+    for row in all_data:
+        row['image'] = extract_song_artwork(row['image'], f"s_{row['id']}")
+
+    return all_data

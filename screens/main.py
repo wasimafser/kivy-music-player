@@ -12,6 +12,7 @@ import datetime
 Builder.load_string('''
 #:import HomeScreen screens.main_screen.home.HomeScreen
 #:import SongListScreen screens.main_screen.songlist.SongListScreen
+#:import ArtistsScreen screens.main_screen.artists.ArtistsScreen
 #:import SPlayScreen screens.main_screen.splay.SPlayScreen
 
 <MainScreen>:
@@ -69,6 +70,8 @@ Builder.load_string('''
                 SongListScreen:
                     name: "song_list_screen"
 
+                ArtistsScreen:
+                    name: 'artists_screen'
 
 
             MDNavigationDrawer:
@@ -95,6 +98,7 @@ Builder.load_string('''
                         font_style: 'OpenSans'
                         halign: 'center'
                         valign: 'center'
+                        theme_text_color: 'Primary'
 
                 ScrollView:
                     id: nav_items
@@ -117,6 +121,14 @@ Builder.load_string('''
 
                             IconLeftWidget:
                                 icon: 'music'
+
+                        OneLineIconListItem:
+                            text: 'Artists'
+                            divider: None
+                            on_release: sm.current = 'artists_screen'
+
+                            IconLeftWidget:
+                                icon: 'account'
 
 <MiniPlayer>:
     size_hint: 0.9, 0.1

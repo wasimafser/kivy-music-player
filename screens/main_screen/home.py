@@ -15,6 +15,8 @@ if platform == 'android':
 from libs.database.get import all_artists, most_listened_songs, song
 
 Builder.load_string('''
+#:import ArtistCard screens.main_screen.artists.ArtistCard
+
 <HomeScreen>:
     BoxLayout:
         orientation: 'vertical'
@@ -26,7 +28,7 @@ Builder.load_string('''
             halign: 'center'
             font_style: "Button"
         RecycleView:
-            id: artists_rv
+            id: top_artists_rv
             viewclass: 'ArtistCard'
             size_hint_y: 0.3
             do_scroll_x: True
@@ -83,21 +85,6 @@ Builder.load_string('''
         #     text: "LOAD ADMOB AD"
         #     on_release: root._load_ad('admob')
 
-<ArtistCard>:
-    orientation: 'vertical'
-    MDCard:
-        size_hint_x: None
-        pos_hint: {'center_x': 0.5}
-        width: self.height
-        FitImage:
-            texture: root.image
-    MDLabel:
-        text: root.name
-        halign: 'center'
-        size_hint_y: 0.15
-        font_style: 'OpenSans'
-        theme_text_color: 'Primary'
-
 <TopSongsCard>:
     spacing: dp(5)
     focus_behaviour: True
@@ -122,14 +109,6 @@ Builder.load_string('''
     #     icon: 'play'
     #     on_release: root.toggle_song(root.id)
 ''')
-
-class ArtistCard(BoxLayout):
-    id = NumericProperty()
-    image = ObjectProperty()
-    name = StringProperty()
-
-    def __init__(self, *args, **kwargs):
-        super(ArtistCard, self).__init__(*args, **kwargs)
 
 class TopSongsCard(MDCard):
     id = NumericProperty()
@@ -174,7 +153,7 @@ class HomeScreen(MDBottomNavigationItem):
             print(e)
 
     def update_widgets(self, *args):
-        self.ids.artists_rv.data = all_artists()
+        self.ids.top_artists_rv.data = all_artists()
         self.ids.top_songs_rv.data = most_listened_songs()
 
     def _load_ad(self, source, *args):
