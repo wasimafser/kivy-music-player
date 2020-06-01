@@ -42,6 +42,8 @@ class MainApp(MDApp):
     all_songs = ListProperty()
     now_playing = DictProperty()
 
+    main_song_screen = None
+
     now_playing_background = OptionProperty('default', options=['default', 'artwork-color'])
 
     remote_id = StringProperty('')
@@ -336,6 +338,17 @@ class MainApp(MDApp):
         })
 
     def keyboard_handler(self, window, key, scancode=None, codepoint=None, modifier=None, **kwargs):
+        if not self.main_song_screen:
+            for screen in self.sm.screens:
+                if screen.name == 'song_screen':
+                    self.main_song_screen = screen
+
+        if scancode == 261:
+            self.main_song_screen.toggle_song_play()
+        elif scancode == 258:
+            self.main_song_screen.next_song()
+        elif scancode == 259:
+            self.main_song_screen.prev_song()
         if key == 27:
             if self.sm.current == 'main_screen':
                 return False
