@@ -13,6 +13,7 @@ Builder.load_string('''
 #:import HomeScreen screens.main_screen.home.HomeScreen
 #:import SongListScreen screens.main_screen.songlist.SongListScreen
 #:import ArtistsScreen screens.main_screen.artists.ArtistsScreen
+#:import AlbumsScreen screens.main_screen.albums.AlbumsScreen
 #:import SPlayScreen screens.main_screen.splay.SPlayScreen
 
 <MainScreen>:
@@ -73,6 +74,9 @@ Builder.load_string('''
                 ArtistsScreen:
                     name: 'artists_screen'
 
+                AlbumsScreen:
+                    name: 'albums_screen'
+
 
             MDNavigationDrawer:
                 id: nav_drawer
@@ -129,6 +133,14 @@ Builder.load_string('''
 
                             IconLeftWidget:
                                 icon: 'account'
+
+                        OneLineIconListItem:
+                            text: 'Albums'
+                            divider: None
+                            on_release: sm.current = 'albums_screen'
+
+                            IconLeftWidget:
+                                icon: 'album'
 
 <MiniPlayer>:
     size_hint: 0.9, 0.1

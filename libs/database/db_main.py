@@ -23,6 +23,7 @@ with con:
 with con:
     con.execute('''CREATE TABLE IF NOT EXISTS album(
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    spotify_id VARCHAR UNIQUE,
                     name VARCHAR UNIQUE,
                     artist INTEGER,
                     image BLOB,
@@ -166,7 +167,9 @@ def initialize(config):
                                     VALUES(?, ?, ?)
                                     ''', (artist, artist_info['spotify_id'], artist_info['image'],))
                                 added_artist_ids[artist] = cursor.lastrowid
-                            except sqlite3.IntegrityError:
+                                print(added_artist_ids)
+                            except sqlite3.IntegrityError as e:
+                                print(e)
                                 continue
 
                 with con:
@@ -178,22 +181,24 @@ def initialize(config):
 
                 try:
                     with con:
-                        cursor = con.execute("INSERT INTO album(name, artist) VALUES(?, ?)", (info['album'], artist_id, ))
+                        album_info = {
+                            'spotify_id': None,
+                            'image': None
+                        }
+                        album_info = spotify.get_album_info(info['album'], search=True)
+                        cursor = con.execute("INSERT INTO album(name, artist, spotify_id, image) VALUES(?, ?, ?, ?)", (info['album'], artist_id, album_info['spotify_id'], album_info['image']))
                     album_id = cursor.lastrowid
                 except sqlite3.IntegrityError:
                     with con:
                         cursor = con.execute("SELECT id from album WHERE name = ?", (info['album'], ))
                     album_id = cursor.fetchone()['id']
 
-                try:
-                    with con:
-                        cursor = con.execute("INSERT INTO songs(name, length, extension, path, album, image) VALUES(?, ?, ?, ?, ?, ?)", (info['name'], info['length'], info['extension'], info['path'], album_id, info['artwork'], ))
-                        song_id = cursor.lastrowid
+                with con:
+                    cursor = con.execute("INSERT INTO songs(name, length, extension, path, album, image) VALUES(?, ?, ?, ?, ?, ?)", (info['name'], info['length'], info['extension'], info['path'], album_id, info['artwork'], ))
+                    song_id = cursor.lastrowid
 
-                        for artist in values:
-                            artist_type = 2
-                            if artist == main_artist:
-                                artist_type = 1
-                            con.execute("INSERT INTO song_artist(song_id, artist_id, artist_type) VALUES(?, ?, ?)", (song_id, added_artist_ids[artist], artist_type))
-                except Exception as e:
-                    print(e)
+                    for artist in values:
+                        artist_type = 2
+                        if artist == main_artist:
+                            artist_type = 1
+                        con.execute("INSERT INTO song_artist(song_id, artist_id, artist_type) VALUES(?, ?, ?)", (song_id, added_artist_ids[artist], artist_type))

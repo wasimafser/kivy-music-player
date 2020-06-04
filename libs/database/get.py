@@ -135,3 +135,48 @@ def artist_songs(artist_id):
         row['image'] = extract_song_artwork(row['image'], f"s_{row['id']}")
 
     return all_data
+
+def all_albums():
+    with con:
+        cursor = con.execute('''
+            SELECT *
+            FROM album
+        ''')
+
+    all_data = cursor.fetchall()
+
+    for row in all_data:
+        row['image'] = extract_song_artwork(row['image'], f"al_{row['id']}")
+
+    return all_data
+
+def album(album_id):
+    with con:
+        cursor = con.execute('''
+            SELECT *
+            FROM album
+            WHERE id = ?
+        ''', (album_id, ))
+
+    album_data = cursor.fetchone()
+    album_data['image'] = extract_song_artwork(album_data['image'], f"al_{album_data['id']}")
+
+    return album_data
+
+def album_songs(album_id):
+    with con:
+        cursor = con.execute('''
+            SELECT
+                s.*
+            FROM
+                songs s
+            WHERE
+                s.album = ?
+        ''', (album_id, ))
+
+    all_data = cursor.fetchall()
+
+    for row in all_data:
+        row['image'] = extract_song_artwork(row['image'], f"s_{row['id']}")
+
+    return all_data

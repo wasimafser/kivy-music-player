@@ -13,13 +13,13 @@ from kivy.utils import get_color_from_hex
 from kivy.properties import ObjectProperty, DictProperty, NumericProperty, StringProperty
 from kivy.clock import Clock
 
-from libs.database.get import all_artists, artist, artist_songs, song
+from libs.database.get import all_albums, album, album_songs, song
 
 Builder.load_string('''
-<ArtistsScreen>:
+<AlbumsScreen>:
     RecycleView:
-        id: artists_rv
-        viewclass: 'ArtistCard'
+        id: albums_rv
+        viewclass: 'AlbumCard'
         # size_hint_y: 0.3
         do_scroll_x: False
         do_scroll_y: True
@@ -43,9 +43,9 @@ Builder.load_string('''
             #         pos: self.pos
 
 
-<ArtistCard>:
+<AlbumCard>:
     orientation: 'vertical'
-    on_touch_up: if self.collide_point(*args[1].pos): self.show_artist_songs(self.id)
+    on_touch_up: if self.collide_point(*args[1].pos): self.show_album_songs(self.id)
     MDCard:
         size_hint_x: None
         pos_hint: {'center_x': 0.5}
@@ -59,16 +59,16 @@ Builder.load_string('''
         font_style: 'OpenSans'
         theme_text_color: 'Primary'
 
-<ArtistSongsDialogContent>:
+<AlbumSongsDialogContent>:
     BoxLayout:
         pos_hint: {'center_y': 0.5, 'center_x': 0.5}
         orientation: 'horizontal'
         MDCard:
             FitImage:
-                id: artist_songs_img
+                id: album_songs_img
         RecycleView:
-            id: artist_songs_rv
-            viewclass: 'ArtistSongsCard'
+            id: album_songs_rv
+            viewclass: 'AlbumSongsCard'
             do_scroll_x: False
             do_scroll_y: True
             RecycleBoxLayout:
@@ -81,7 +81,7 @@ Builder.load_string('''
                 height: self.minimum_height
 
 
-<ArtistSongsCard>:
+<AlbumSongsCard>:
     spacing: dp(5)
     focus_behaviour: True
     ripple_behaviour: True
@@ -103,7 +103,7 @@ Builder.load_string('''
     #     on_release: root.toggle_song(root.id)
 ''')
 
-class ArtistSongsCard(MDCard):
+class AlbumSongsCard(MDCard):
     id = NumericProperty()
     name = StringProperty()
     artist = StringProperty()
@@ -111,7 +111,7 @@ class ArtistSongsCard(MDCard):
     length = StringProperty()
 
     def __init__(self, *args, **kwargs):
-        super(ArtistSongsCard, self).__init__(*args, **kwargs)
+        super(AlbumSongsCard, self).__init__(*args, **kwargs)
         self.app = MDApp.get_running_app()
 
     def toggle_song(self, song_id, *args):
@@ -130,26 +130,26 @@ class ArtistSongsCard(MDCard):
             sm.add_widget(SongScreen())
             sm.current = screen_name
 
-class ArtistSongsDialogContent(FloatLayout):
+class AlbumSongsDialogContent(FloatLayout):
     dialog = None
-    artist_id = NumericProperty()
-    artist_data = DictProperty()
+    album_id = NumericProperty()
+    album_data = DictProperty()
 
     def __init__(self, *args, **kwargs):
-        super(ArtistSongsDialogContent, self).__init__(*args, **kwargs)
-        self.artist_data = artist(self.artist_id)
+        super(AlbumSongsDialogContent, self).__init__(*args, **kwargs)
+        self.album_data = album(self.album_id)
 
         Clock.schedule_once(self.update_widgets)
 
     def update_widgets(self, *args):
-        self.ids.artist_songs_img.texture = self.artist_data['image']
-        self.ids.artist_songs_rv.data = artist_songs(self.artist_id)
+        self.ids.album_songs_img.texture = self.album_data['image']
+        self.ids.album_songs_rv.data = album_songs(self.album_id)
 
     def dismiss_dialog(self, *args):
         self.dialog.dismiss()
 
 
-class ArtistCard(BoxLayout):
+class AlbumCard(BoxLayout):
     id = NumericProperty()
     image = ObjectProperty()
     name = StringProperty()
@@ -157,22 +157,22 @@ class ArtistCard(BoxLayout):
     dialog = None
 
     def __init__(self, *args, **kwargs):
-        super(ArtistCard, self).__init__(*args, **kwargs)
+        super(AlbumCard, self).__init__(*args, **kwargs)
         self.app = MDApp.get_running_app()
 
-    def show_artist_songs(self, id, *args):
+    def show_album_songs(self, id, *args):
         if not self.dialog:
             self.dialog = ModalView(size_hint=(0.9, 0.9), background_color=self.app.theme_cls.bg_light)
-            content = ArtistSongsDialogContent(artist_id=id)
+            content = AlbumSongsDialogContent(album_id=id)
             content.add_widget(MDIconButton(icon='close', pos_hint={'top': 1, 'right': 1}, on_release=lambda x: self.dialog.dismiss()))
             self.dialog.add_widget(content)
         self.dialog.open()
 
-class ArtistsScreen(Screen):
+class AlbumsScreen(Screen):
 
     def __init__(self, *args, **kwargs):
-        super(ArtistsScreen, self).__init__(*args, **kwargs)
-        Clock.schedule_once(self.set_artists_data)
+        super(AlbumsScreen, self).__init__(*args, **kwargs)
+        Clock.schedule_once(self.set_albums_data)
 
-    def set_artists_data(self, *args):
-        self.ids.artists_rv.data = all_artists()
+    def set_albums_data(self, *args):
+        self.ids.albums_rv.data = all_albums()

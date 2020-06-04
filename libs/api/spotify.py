@@ -1,5 +1,6 @@
 import requests
 import base64
+import re
 
 SPOTIFY_CLIENT_ID = "3fed3eba3f324aa392ada6ca006c8314"
 SPOTIFY_CLIENT_SECRET = "95851f5ef4b441bca1820f5288f25a11"
@@ -48,3 +49,28 @@ def get_artist_info(artist, search=False):
             print(e)
 
         return artist_info
+
+def get_album_info(album, search=False):
+    album_info = {
+        'spotify_id': None,
+        'image': None
+    }
+    if search:
+        album = re.sub(r'\([^()]*\)', '', album)
+        response = requests.get(
+            url="https://api.spotify.com/v1/search",
+            headers={"Authorization": f"{TOKEN_TYPE} {API_TOKEN}"},
+            params={
+                'q': album,
+                'type': 'album',
+                'limit': 1
+            }
+        ).json()
+
+        try:
+            album_info['spotify_id'] = response['albums']['items'][0]['id']
+            album_info['image'] = extract_image_data(response['albums']['items'][0]['images'][0]['url'])
+        except Exception as e:
+            print(e)
+
+        return album_info
