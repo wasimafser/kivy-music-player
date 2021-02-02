@@ -77,6 +77,9 @@ Builder.load_string('''
                 AlbumsScreen:
                     name: 'albums_screen'
 
+                SPlayScreen:
+                    name: 'splay_screen'
+
 
             MDNavigationDrawer:
                 id: nav_drawer
@@ -141,6 +144,14 @@ Builder.load_string('''
 
                             IconLeftWidget:
                                 icon: 'album'
+
+                        OneLineIconListItem:
+                            text: 'S-PLAY'
+                            divider: None
+                            on_release: sm.current = 'splay_screen'
+
+                            IconLeftWidget:
+                                icon: 'share'
 
 <MiniPlayer>:
     size_hint: 0.9, 0.1
