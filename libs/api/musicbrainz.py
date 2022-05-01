@@ -1,8 +1,8 @@
 import musicbrainzngs
 import requests
 
-musicbrainzngs.set_useragent('Matrix Music Player', '0.1', 'wasim.afser@gmail.com')
-musicbrainzngs.auth('wasimafser', 'w@sim0206')
+musicbrainzngs.set_useragent('Matrix Music Player', '0.1', '<email>')
+musicbrainzngs.auth('<username>', '<password>')
 
 def get_artist_info(artist, search=False):
     artist_info = {
