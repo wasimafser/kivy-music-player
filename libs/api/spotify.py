@@ -2,8 +2,8 @@ import requests
 import base64
 import re
 
-SPOTIFY_CLIENT_ID = "3fed3eba3f324aa392ada6ca006c8314"
-SPOTIFY_CLIENT_SECRET = "95851f5ef4b441bca1820f5288f25a11"
+SPOTIFY_CLIENT_ID = "<client_id>"
+SPOTIFY_CLIENT_SECRET = "<client_secret>"
 
 # API_TOKEN = ""
 # TOKEN_TYPE = ""
