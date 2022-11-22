@@ -27,7 +27,7 @@ mutagen @ git+https://github.com/quodlibet/mutagen.git@9ff77790090774bc3c633f74f
 oscpy==0.5.0
 pep517==0.6.0
 pexpect==4.8.0
-Pillow==7.1.2
+Pillow==9.3.0
 plyer==1.4.3
 ptyprocess==0.6.0
 pycparser==2.20
